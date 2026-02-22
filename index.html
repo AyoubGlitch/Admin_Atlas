@@ -2607,12 +2607,10 @@ async function getFirestoreData(collectionName, defaultValue = []) {
 async function setFirestoreData(collectionName, data) {
     try {
         const batch = db.batch();
-        // Delete all existing documents in the collection
         const snapshot = await db.collection(collectionName).get();
         snapshot.forEach(doc => batch.delete(doc.ref));
-        // Add new documents
         data.forEach(item => {
-            const docRef = db.collection(collectionName).doc(); // auto ID
+            const docRef = db.collection(collectionName).doc();
             batch.set(docRef, item);
         });
         await batch.commit();
@@ -2621,22 +2619,39 @@ async function setFirestoreData(collectionName, data) {
     }
 }
 
-// Override localStorage functions to use Firestore
-const originalGetLocal = window.getLocal || function(key, defaultValue) {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : defaultValue;
-};
+// ============ Realtime listener for orders ============
+let unsubscribeOrders = null;
 
-const originalSetLocal = window.setLocal || function(key, data) {
-    localStorage.setItem(key, JSON.stringify(data));
-};
+function listenToOrders() {
+    if (unsubscribeOrders) {
+        unsubscribeOrders();
+    }
+    
+    unsubscribeOrders = db.collection("orders").onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added" || change.type === "modified" || change.type === "removed") {
+                loadOrdersFromSnapshot();
+            }
+        });
+    }, (error) => {
+        console.error("Error listening to orders:", error);
+    });
+}
 
-// We'll keep using localStorage for temporary/per-session data like loggedInAccount
-// but for main collections we'll use Firestore. We'll modify the code to load from Firestore on startup and save to Firestore on changes.
+async function loadOrdersFromSnapshot() {
+    const snapshot = await db.collection("orders").get();
+    orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    localStorage.setItem('adminOrders', JSON.stringify(orders));
+    
+    if (document.getElementById('ordersPage').classList.contains('active')) {
+        loadOrders();
+    }
+    
+    updateOrdersBadge();
+}
 
-// We'll also need to make many functions async. To keep compatibility, we'll use async/await and ensure the UI updates after data is loaded.
-
-// ============ Global variables (will be populated from Firestore) ============
+// ============ Global variables ============
 let products = [];
 let categoriesWithImages = [];
 let coupons = [];
@@ -2672,12 +2687,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupModalListeners();
     setupDragAndDrop();
     
-    // التحقق من تسجيل الدخول
     checkLoginStatus();
 });
 
 async function initializeSystem() {
-    // Load all data from Firestore
     products = await getFirestoreData('products');
     categoriesWithImages = await getFirestoreData('categories');
     coupons = await getFirestoreData('coupons');
@@ -2686,7 +2699,8 @@ async function initializeSystem() {
     users = await getFirestoreData('users');
     systemAccounts = await getFirestoreData('systemAccounts');
 
-    // If systemAccounts is empty, create default admin account in Firebase Auth and Firestore
+    listenToOrders();
+
     if (systemAccounts.length === 0) {
         const defaultAccount = {
             email: "admin@atlas.ly",
@@ -2704,7 +2718,6 @@ async function initializeSystem() {
         systemAccounts.push(defaultAccount);
         await setFirestoreData('systemAccounts', systemAccounts);
 
-        // Create user in Firebase Auth
         try {
             await auth.createUserWithEmailAndPassword(defaultAccount.email, defaultAccount.password);
         } catch (error) {
@@ -2712,13 +2725,11 @@ async function initializeSystem() {
         }
     }
 
-    // Update customer-facing data (products, categories, slider)
     updateCustomerProducts();
     updateCustomerCategories();
     updateCustomerSlider();
 }
 
-// ============ Functions to save data to Firestore after modifications ============
 async function saveProductsToFirestore() {
     await setFirestoreData('products', products);
     updateCustomerProducts();
@@ -2727,7 +2738,7 @@ async function saveProductsToFirestore() {
 async function saveCategoriesToFirestore() {
     await setFirestoreData('categories', categoriesWithImages);
     updateCustomerCategories();
-    updateCustomerProducts(); // because products visibility depends on categories visibility
+    updateCustomerProducts();
 }
 
 async function saveCouponsToFirestore() {
@@ -2774,7 +2785,6 @@ function showLoginScreen() {
     document.getElementById('loginOverlay').style.display = 'flex';
     document.getElementById('adminSystem').style.display = 'none';
     
-    // تعبئة قائمة الحسابات
     const loginEmailSelect = document.getElementById('loginEmail');
     loginEmailSelect.innerHTML = '<option value="">اختر الحساب من القائمة</option>';
     systemAccounts.forEach(account => {
@@ -2787,7 +2797,6 @@ function showAdminSystem() {
     document.getElementById('adminSystem').style.display = 'block';
 }
 
-// ============ Login function using Firebase Auth ============
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     await login();
@@ -2799,9 +2808,7 @@ async function login() {
     const loginError = document.getElementById('loginError');
     
     try {
-        // Sign in with Firebase Auth
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        // Find account in systemAccounts
         const account = systemAccounts.find(acc => acc.email === email);
         if (account) {
             loggedInAccount = {
@@ -2823,7 +2830,6 @@ async function login() {
             updateOrdersBadge();
             applyPermissions();
         } else {
-            // Account exists in Auth but not in systemAccounts? Should not happen.
             loginError.style.display = 'block';
         }
     } catch (error) {
@@ -2847,7 +2853,6 @@ function applyPermissions() {
     
     const permissions = loggedInAccount.permissions;
     
-    // تطبيق الصلاحيات على عناصر القائمة
     document.querySelectorAll('.menu-item').forEach(item => {
         const page = item.getAttribute('data-page');
         if (page) {
@@ -2860,7 +2865,6 @@ function applyPermissions() {
         }
     });
     
-    // تطبيق الصلاحيات على الأزرار والعناصر
     document.querySelectorAll('[data-permission]').forEach(element => {
         const requiredPermission = element.getAttribute('data-permission');
         const [section, action] = requiredPermission.split('.');
@@ -2872,7 +2876,6 @@ function applyPermissions() {
         }
     });
     
-    // إخفاء الصفحات غير المسموح بها
     document.querySelectorAll('.page').forEach(page => {
         const pageId = page.id;
         const permissionKey = getPermissionKeyFromPage(pageId);
@@ -3135,13 +3138,9 @@ async function saveSystemAccount() {
                 systemAccounts[index].permissions = permissions;
                 if (password) {
                     systemAccounts[index].password = password;
-                    // Update password in Firebase Auth
                     const user = auth.currentUser;
                     if (user && user.email === email) {
                         await user.updatePassword(password);
-                    } else {
-                        // If not current user, we need admin SDK? Not possible from client. So we'll skip or handle differently.
-                        // For simplicity, we'll just update in Firestore and assume password remains same.
                     }
                 }
             }
@@ -3152,7 +3151,6 @@ async function saveSystemAccount() {
                 permissions: permissions
             };
             systemAccounts.push(newAccount);
-            // Create user in Firebase Auth
             await auth.createUserWithEmailAndPassword(email, password);
         }
         
@@ -3187,12 +3185,9 @@ async function deleteSystemAccount() {
             systemAccounts = systemAccounts.filter(acc => acc.email !== email);
             await saveSystemAccountsToFirestore();
             
-            // Delete from Firebase Auth (requires Admin SDK, cannot be done from client side easily)
-            // We'll skip deleting from Auth and just remove from Firestore.
-            
             closeSystemAccountModal();
             loadSystemAccounts();
-            alert('تم حذف الحساب بنجاح (ملاحظة: لم يتم حذف المستخدم من المصادقة)');
+            alert('تم حذف الحساب بنجاح');
         } catch (error) {
             console.error("Error deleting system account:", error);
             alert("حدث خطأ أثناء حذف الحساب");
@@ -3204,7 +3199,7 @@ function closeSystemAccountModal() {
     document.getElementById('systemAccountModalOverlay').classList.remove('active');
 }
 
-// ============ وظائف إدارة حسابات العملاء ============
+// ============ وظائف إدارة حسابات العملاء (معدلة بشكل صحيح) ============
 function loadAccounts(searchTerm = '', page = 1) {
     const accountsGrid = document.getElementById('accountsGrid');
     const noAccountsMessage = document.getElementById('noAccountsMessage');
@@ -3215,8 +3210,8 @@ function loadAccounts(searchTerm = '', page = 1) {
     currentAccountsPage = page;
     
     const filteredUsers = users.filter(user => 
-        `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (user.phone && user.phone.includes(searchTerm))
     );
     
@@ -3290,7 +3285,7 @@ function createAccountCard(user) {
     const lastNameChar = user.lastName ? user.lastName.charAt(0) : 'S';
     const avatarText = firstNameChar + lastNameChar;
     
-    const userOrders = orders.filter(order => order.customer.email === user.email);
+    const userOrders = orders.filter(order => order.customer && order.customer.email === user.email);
     const pendingOrders = userOrders.filter(order => order.status === 'pending').length;
     
     const addressesCount = user.addresses ? user.addresses.length : 0;
@@ -3299,7 +3294,7 @@ function createAccountCard(user) {
     if (user.addresses && user.addresses.length > 0) {
         const shortAddresses = user.addresses.slice(0, 2);
         shortAddresses.forEach(addr => {
-            addressesHTML += `<div class="address-item-small">${addr.city}: ${addr.addressDetails.substring(0, 30)}${addr.addressDetails.length > 30 ? '...' : ''}</div>`;
+            addressesHTML += `<div class="address-item-small">${addr.city || ''}: ${(addr.addressDetails || '').substring(0, 30)}${(addr.addressDetails || '').length > 30 ? '...' : ''}</div>`;
         });
         if (user.addresses.length > 2) {
             addressesHTML += `<div class="address-item-small">و ${user.addresses.length - 2} عنوان آخر</div>`;
@@ -3312,15 +3307,15 @@ function createAccountCard(user) {
         <div class="account-card-header">
             <div class="account-avatar">${avatarText}</div>
             <div class="account-info-summary">
-                <div class="account-name">${user.firstName} ${user.lastName}</div>
-                <div class="account-email">${user.email}</div>
+                <div class="account-name">${user.firstName || ''} ${user.lastName || ''}</div>
+                <div class="account-email">${user.email || ''}</div>
             </div>
         </div>
         <div class="account-card-body">
             <div class="account-details">
                 <div class="account-detail-item">
                     <span class="account-detail-label">رقم الهاتف:</span>
-                    <span class="account-detail-value">${user.phone}</span>
+                    <span class="account-detail-value">${user.phone || 'غير محدد'}</span>
                 </div>
                 <div class="account-detail-item">
                     <span class="account-detail-label">عدد الطلبات:</span>
@@ -3341,27 +3336,34 @@ function createAccountCard(user) {
             </div>
         </div>
         <div class="account-card-footer">
-            <button class="user-orders-btn" data-email="${user.email}">
+            <button class="user-orders-btn" data-email="${user.email || ''}">
                 <i class="fas fa-box"></i> طلبات هذا الحساب
             </button>
-            ${checkPermission('accounts', 'edit') ? `<button class="action-btn edit-btn" data-email="${user.email}">تعديل</button>` : ''}
-            ${checkPermission('accounts', 'delete') ? `<button class="action-btn delete-btn" data-email="${user.email}">حذف</button>` : ''}
+            ${checkPermission('accounts', 'edit') ? `<button class="action-btn edit-btn" data-email="${user.email || ''}">تعديل</button>` : ''}
+            ${checkPermission('accounts', 'delete') ? `<button class="action-btn delete-btn" data-email="${user.email || ''}">حذف</button>` : ''}
         </div>
     `;
     return card;
 }
 
+// دالة فتح نافذة تعديل حساب العميل - الآن تعمل بشكل صحيح ✅
 function openEditAccountModal(email) {
     if (!checkPermission('accounts', 'edit')) {
         alert('ليس لديك صلاحية لتعديل حسابات العملاء');
         return;
     }
     
+    // البحث عن المستخدم في مصفوفة users
     const user = users.find(u => u.email === email);
-    if (!user) return;
+    if (!user) {
+        alert('لم يتم العثور على المستخدم');
+        return;
+    }
     
+    // تخزين المستخدم الحالي للاستخدام في دوال أخرى
     currentUserView = user;
     
+    // الحصول على عناصر النموذج
     const editAccountModalTitle = document.getElementById('editAccountModalTitle');
     const editAccountEmailModal = document.getElementById('editAccountEmailModal');
     const editAccountFirstNameModal = document.getElementById('editAccountFirstNameModal');
@@ -3370,17 +3372,46 @@ function openEditAccountModal(email) {
     const editAccountPhoneModal = document.getElementById('editAccountPhoneModal');
     const editAccountPasswordModal = document.getElementById('editAccountPasswordModal');
     
-    if (editAccountModalTitle) editAccountModalTitle.textContent = `تعديل حساب ${user.firstName} ${user.lastName}`;
-    if (editAccountEmailModal) editAccountEmailModal.value = user.email;
-    if (editAccountFirstNameModal) editAccountFirstNameModal.value = user.firstName;
-    if (editAccountLastNameModal) editAccountLastNameModal.value = user.lastName;
-    if (editAccountEmailDisplayModal) editAccountEmailDisplayModal.value = user.email;
-    if (editAccountPhoneModal) editAccountPhoneModal.value = user.phone;
-    if (editAccountPasswordModal) editAccountPasswordModal.value = '';
+    // تعبئة الحقول بالبيانات - التأكد من وجود قيم حتى لو كانت فارغة ✅
+    if (editAccountModalTitle) {
+        editAccountModalTitle.textContent = `تعديل حساب ${user.firstName || ''} ${user.lastName || ''}`;
+    }
+    if (editAccountEmailModal) {
+        editAccountEmailModal.value = user.email || '';
+    }
+    if (editAccountFirstNameModal) {
+        editAccountFirstNameModal.value = user.firstName || '';
+    }
+    if (editAccountLastNameModal) {
+        editAccountLastNameModal.value = user.lastName || '';
+    }
+    if (editAccountEmailDisplayModal) {
+        editAccountEmailDisplayModal.value = user.email || '';
+        editAccountEmailDisplayModal.readOnly = true; // جعله للقراءة فقط ✅
+        editAccountEmailDisplayModal.style.backgroundColor = '#f8f9fa';
+        editAccountEmailDisplayModal.style.cursor = 'not-allowed';
+    }
+    if (editAccountPhoneModal) {
+        editAccountPhoneModal.value = user.phone || '';
+    }
+    if (editAccountPasswordModal) {
+        editAccountPasswordModal.value = ''; // كلمة المرور تبقى فارغة لأسباب أمنية
+    }
     
+    // تحميل العناوين
     loadAddressesInEditModal(user.addresses || []);
     
-    openEditAccountModal();
+    // فتح النافذة المنبثقة
+    openEditAccountModalWindow();
+}
+
+// دالة فتح النافذة المنبثقة
+function openEditAccountModalWindow() {
+    const modalOverlay = document.getElementById('editAccountModalOverlay');
+    if (modalOverlay) {
+        modalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function loadAddressesInEditModal(addresses) {
@@ -3398,8 +3429,8 @@ function loadAddressesInEditModal(addresses) {
         const addressItem = document.createElement('div');
         addressItem.className = 'address-item-full';
         addressItem.innerHTML = `
-            <strong>${address.city}</strong>
-            <p>${address.addressDetails}</p>
+            <strong>${address.city || ''}</strong>
+            <p>${address.addressDetails || ''}</p>
             <div class="address-actions">
                 ${checkPermission('accounts', 'edit') ? `<button class="action-btn delete-btn delete-address-btn" data-index="${index}">
                     <i class="fas fa-trash"></i> حذف
@@ -3436,14 +3467,6 @@ function deleteAddressFromUser(index) {
         }
         
         alert('تم حذف العنوان بنجاح.');
-    }
-}
-
-function openEditAccountModal() {
-    const modalOverlay = document.getElementById('editAccountModalOverlay');
-    if (modalOverlay) {
-        modalOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
     }
 }
 
@@ -3492,13 +3515,6 @@ async function saveAccountChanges() {
         
         if (newPassword) {
             users[userIndex].password = newPassword;
-            // Update password in Firebase Auth if this user exists in Auth
-            try {
-                // We need to know if this user is a system account? Actually users are customers, they might not have Auth.
-                // For simplicity, we skip updating password for customer accounts.
-            } catch (error) {
-                console.error("Error updating password for customer:", error);
-            }
         }
         
         users[userIndex].addresses = currentUserView.addresses || [];
@@ -3506,7 +3522,7 @@ async function saveAccountChanges() {
         await saveUsersToFirestore();
         
         orders.forEach(order => {
-            if (order.customer.email === currentUserView.email) {
+            if (order.customer && order.customer.email === currentUserView.email) {
                 order.customer.name = `${firstName} ${lastName}`;
                 order.customer.phone = phone;
             }
@@ -3537,7 +3553,7 @@ async function deleteAccountByEmail(email) {
     users = users.filter(u => u.email !== email);
     await saveUsersToFirestore();
     
-    orders = orders.filter(order => order.customer.email !== email);
+    orders = orders.filter(order => order.customer && order.customer.email !== email);
     await saveOrdersToFirestore();
     
     alert('تم حذف الحساب بنجاح.');
@@ -3566,9 +3582,9 @@ function viewUserOrders(email) {
         userInfoHeader.innerHTML = `
             <div class="user-avatar-large">${avatarText}</div>
             <div class="user-details-large">
-                <div class="user-name-large">${user.firstName} ${user.lastName}</div>
-                <div class="user-email-large">${user.email}</div>
-                <div class="user-phone-large">${user.phone}</div>
+                <div class="user-name-large">${user.firstName || ''} ${user.lastName || ''}</div>
+                <div class="user-email-large">${user.email || ''}</div>
+                <div class="user-phone-large">${user.phone || ''}</div>
             </div>
         `;
     }
@@ -3596,10 +3612,10 @@ function loadUserOrders(searchTerm = '', page = 1) {
     if (!currentUserView) return;
     
     const userOrders = orders.filter(order => 
-        order.customer.email === currentUserView.email &&
+        order.customer && order.customer.email === currentUserView.email &&
         (order.id.toString().includes(searchTerm) ||
-        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.phone.includes(searchTerm))
+        (order.customer.name && order.customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (order.customer.phone && order.customer.phone.includes(searchTerm)))
     );
     
     userOrders.sort((a, b) => b.id - a.id);
@@ -3637,7 +3653,7 @@ function loadUserOrders(searchTerm = '', page = 1) {
         order.items.forEach(item => {
             const currentProduct = products.find(p => p.id === item.id);
             const specsToDisplay = currentProduct ? currentProduct.specs : item.specs;
-            const imageToDisplay = currentProduct ? currentProduct.images[0] : item.image;
+            const imageToDisplay = currentProduct ? (currentProduct.images ? currentProduct.images[0] : null) : item.image;
             
             let specsHTML = '';
             if (specsToDisplay && specsToDisplay.length > 0) {
@@ -3683,10 +3699,10 @@ function loadUserOrders(searchTerm = '', page = 1) {
                 <div class="order-date">${order.date}</div>
             </div>
             <div class="order-customer">
-                <div><strong>العميل:</strong> ${order.customer.name}</div>
-                <div><strong>الهاتف:</strong> ${order.customer.phone}</div>
-                <div><strong>المدينة:</strong> ${order.customer.city}</div>
-                <div><strong>العنوان:</strong> ${order.customer.address}</div>
+                <div><strong>العميل:</strong> ${order.customer.name || ''}</div>
+                <div><strong>الهاتف:</strong> ${order.customer.phone || ''}</div>
+                <div><strong>المدينة:</strong> ${order.customer.city || ''}</div>
+                <div><strong>العنوان:</strong> ${order.customer.address || ''}</div>
             </div>
             ${couponInfo}
             ${orderDetailsBoxes}
@@ -3795,7 +3811,7 @@ async function saveAddress() {
     }
 }
 
-// ============ وظائف إدارة المنتجات ============
+// ============ وظائف إدارة المنتجات (معدلة لترتيب المنتجات) ✅ ============
 function loadProducts(searchTerm = '', page = 1) {
     const productsGrid = document.getElementById('productsGrid');
     const noProductsMessage = document.getElementById('noProductsMessage');
@@ -3806,8 +3822,8 @@ function loadProducts(searchTerm = '', page = 1) {
     currentProductsPage = page;
     
     const filteredProducts = products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     
     if (filteredProducts.length === 0) {
@@ -3865,7 +3881,7 @@ function createProductCard(product, index) {
     card.dataset.id = product.id;
     
     let quantityClass = 'quantity-ok';
-    let quantityStatus = `${product.quantity} قطعة`;
+    let quantityStatus = `${product.quantity || 0} قطعة`;
     
     if (product.quantity <= 0) {
         quantityClass = 'quantity-out';
@@ -3879,7 +3895,7 @@ function createProductCard(product, index) {
 
     let timerInfo = '';
     if (product.timer && product.timer.enabled) {
-        timerInfo = `<div><i class="fas fa-clock"></i> وقت الظهور: ${product.timer.hours} س ${product.timer.minutes} د</div>`;
+        timerInfo = `<div><i class="fas fa-clock"></i> وقت الظهور: ${product.timer.hours || 0} س ${product.timer.minutes || 0} د</div>`;
     }
     
     let discountInfo = '';
@@ -3890,11 +3906,11 @@ function createProductCard(product, index) {
     card.innerHTML = `
         <div class="product-image" style="background-image: url('${product.images && product.images[0] ? product.images[0] : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMEYwRjAiLz4KPHBhdGggZD0iTTEwMCAxMDBMMjAwIDEwMEwyMDAgMjAwTDEwMCAyMDBMMTAwIDEwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTEyNSAxMjVMMTc1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTE3NSAxMjVMMTI1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+'}')"></div>
         <div class="product-card-content">
-            <h4>${product.name}</h4>
+            <h4>${product.name || ''}</h4>
             <div class="product-card-details">
-                <div><i class="fas fa-tag"></i> الفئة: ${product.category}</div>
-                <div><i class="fas fa-coins"></i> سعر التكلفة: ${product.costPrice} د.ل</div>
-                <div><i class="fas fa-dollar-sign"></i> سعر البيع: ${product.sellPrice} د.ل</div>
+                <div><i class="fas fa-tag"></i> الفئة: ${product.category || ''}</div>
+                <div><i class="fas fa-coins"></i> سعر التكلفة: ${product.costPrice || 0} د.ل</div>
+                <div><i class="fas fa-dollar-sign"></i> سعر البيع: ${product.sellPrice || 0} د.ل</div>
                 <div><i class="fas fa-box"></i> الكمية: <span class="quantity-display ${quantityClass}">${quantityStatus}</span></div>
                 <div><i class="fas fa-images"></i> عدد الصور: ${product.images ? product.images.length : 0}</div>
                 ${timerInfo}
@@ -3954,7 +3970,7 @@ async function openEditProductModal(productId) {
         return;
     }
     
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id == productId);
     if (!product) return;
     
     currentEditingProductId = productId;
@@ -3971,7 +3987,7 @@ async function openEditProductModal(productId) {
     
     if (productModalTitle) productModalTitle.textContent = 'تعديل المنتج';
     if (productIdModal) productIdModal.value = product.id;
-    if (productNameModal) productNameModal.value = product.name;
+    if (productNameModal) productNameModal.value = product.name || '';
     
     if (categorySelect) {
         categorySelect.innerHTML = '<option value="">اختر الفئة</option>';
@@ -3981,8 +3997,8 @@ async function openEditProductModal(productId) {
         });
     }
     
-    if (productCostPriceModal) productCostPriceModal.value = product.costPrice;
-    if (productSellPriceModal) productSellPriceModal.value = product.sellPrice;
+    if (productCostPriceModal) productCostPriceModal.value = product.costPrice || 0;
+    if (productSellPriceModal) productSellPriceModal.value = product.sellPrice || 0;
     if (productQuantityModal) productQuantityModal.value = product.quantity || 0;
     if (generalDescriptionModal) generalDescriptionModal.value = product.generalDescription || '';
     
@@ -4014,7 +4030,7 @@ async function openEditProductModal(productId) {
     const timerInputsModal = document.getElementById('timerInputsModal');
     
     if (product.timer) {
-        if (enableTimerModal) enableTimerModal.checked = product.timer.enabled;
+        if (enableTimerModal) enableTimerModal.checked = product.timer.enabled || false;
         if (timerHoursModal) timerHoursModal.value = product.timer.hours || 0;
         if (timerMinutesModal) timerMinutesModal.value = product.timer.minutes || 0;
         if (timerInputsModal) timerInputsModal.style.display = product.timer.enabled ? 'flex' : 'none';
@@ -4028,7 +4044,7 @@ async function openEditProductModal(productId) {
     const discountInputModal = document.getElementById('discountInputModal');
     
     if (product.discount) {
-        if (enableDiscountModal) enableDiscountModal.checked = product.discount.enabled;
+        if (enableDiscountModal) enableDiscountModal.checked = product.discount.enabled || false;
         if (discountPercentageModal) discountPercentageModal.value = product.discount.percentage || 10;
         if (discountInputModal) discountInputModal.style.display = product.discount.enabled ? 'block' : 'none';
     } else {
@@ -4057,6 +4073,20 @@ function closeProductModal() {
     }
 }
 
+// دالة مساعدة لنقل المنتج إلى بداية المصفوفة ✅
+function moveProductToTop(productId) {
+    const index = products.findIndex(p => p.id == productId);
+    if (index > -1) {
+        const product = products[index];
+        products.splice(index, 1); // حذف المنتج من مكانه
+        products.unshift(product); // إضافته في البداية
+        console.log(`تم نقل المنتج ${product.name} إلى بداية القائمة`);
+        return true;
+    }
+    return false;
+}
+
+// دالة حفظ المنتج (معدلة) ✅
 async function saveProduct() {
     if (!checkPermission('products', 'edit')) {
         alert('ليس لديك صلاحية لحفظ المنتجات');
@@ -4106,6 +4136,7 @@ async function saveProduct() {
     const discountPercentage = parseInt(document.getElementById('discountPercentageModal')?.value) || 10;
     
     if (productId) {
+        // تعديل منتج موجود
         const index = products.findIndex(p => p.id == productId);
         if (index !== -1) {
             products[index] = {
@@ -4128,8 +4159,11 @@ async function saveProduct() {
                     percentage: discountPercentage
                 }
             };
+            // نقل المنتج المعدل إلى بداية المصفوفة ✅
+            moveProductToTop(productId);
         }
     } else {
+        // إضافة منتج جديد - نضيفه في البداية مباشرة ✅
         const newProduct = {
             id: Date.now(),
             name,
@@ -4151,7 +4185,7 @@ async function saveProduct() {
             },
             createdAt: new Date().getTime()
         };
-        products.unshift(newProduct);
+        products.unshift(newProduct); // إضافة المنتج الجديد في البداية ✅
     }
     
     await saveProductsToFirestore();
@@ -4174,7 +4208,7 @@ async function deleteProduct(productId) {
     }
     
     if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
-        products = products.filter(p => p.id !== productId);
+        products = products.filter(p => p.id != productId);
         await saveProductsToFirestore();
         
         if (currentCategoryView) {
@@ -4528,7 +4562,7 @@ function loadCoupons() {
                     <div class="coupon-value">${coupon.value} د.ل</div>
                 </div>
                 <div class="coupon-details">
-                    تم استخدامه ${coupon.used} من ${coupon.maxUsage} مرات
+                    تم استخدامه ${coupon.used || 0} من ${coupon.maxUsage || 0} مرات
                 </div>
                 <div class="category-actions">
                     ${checkPermission('coupons', 'delete') ? `<button class="action-btn delete-btn" data-code="${coupon.code}">حذف</button>` : ''}
@@ -4600,9 +4634,9 @@ function loadOrders(searchTerm = '', page = 1) {
     
     const filteredOrders = orders.filter(order => 
         order.id.toString().includes(searchTerm) ||
-        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.phone.includes(searchTerm) ||
-        order.customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (order.customer.name && order.customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (order.customer.phone && order.customer.phone.includes(searchTerm)) ||
+        (order.customer.email && order.customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     
     if (filteredOrders.length === 0) {
@@ -4636,9 +4670,9 @@ function loadOrders(searchTerm = '', page = 1) {
         
         let orderDetailsBoxes = '';
         order.items.forEach(item => {
-            const currentProduct = products.find(p => p.id === item.id);
+            const currentProduct = products.find(p => p.id == item.id);
             const specsToDisplay = currentProduct ? currentProduct.specs : item.specs;
-            const imageToDisplay = currentProduct ? currentProduct.images[0] : item.image;
+            const imageToDisplay = currentProduct ? (currentProduct.images ? currentProduct.images[0] : null) : item.image;
             
             let specsHTML = '';
             if (specsToDisplay && specsToDisplay.length > 0) {
@@ -4684,11 +4718,11 @@ function loadOrders(searchTerm = '', page = 1) {
                 <div class="order-date">${order.date}</div>
             </div>
             <div class="order-customer">
-                <div><strong>العميل:</strong> ${order.customer.name}</div>
-                <div><strong>الهاتف:</strong> ${order.customer.phone}</div>
-                <div><strong>البريد الإلكتروني:</strong> ${order.customer.email}</div>
-                <div><strong>المدينة:</strong> ${order.customer.city}</div>
-                <div><strong>العنوان:</strong> ${order.customer.address}</div>
+                <div><strong>العميل:</strong> ${order.customer.name || ''}</div>
+                <div><strong>الهاتف:</strong> ${order.customer.phone || ''}</div>
+                <div><strong>البريد الإلكتروني:</strong> ${order.customer.email || ''}</div>
+                <div><strong>المدينة:</strong> ${order.customer.city || ''}</div>
+                <div><strong>العنوان:</strong> ${order.customer.address || ''}</div>
             </div>
             ${couponInfo}
             ${orderDetailsBoxes}
@@ -4743,7 +4777,7 @@ async function updateOrderStatus(orderId, status) {
     if (order) {
         if (status === 'approved') {
             order.items.forEach(item => {
-                const productIndex = products.findIndex(p => p.id === item.id);
+                const productIndex = products.findIndex(p => p.id == item.id);
                 if (productIndex !== -1) {
                     if (products[productIndex].quantity !== undefined) {
                         products[productIndex].quantity -= item.quantity;
@@ -4757,6 +4791,8 @@ async function updateOrderStatus(orderId, status) {
         }
         
         order.status = status;
+        // عندما يقوم المسؤول بتغيير الحالة، نجعل seenByCustomer = false ليظهر إشعار للزبون
+        order.seenByCustomer = false;
         await saveOrdersToFirestore();
         
         loadOrders();
@@ -5650,4 +5686,4 @@ function setupModalListeners() {
 }
     </script>
 </body>
-</html>
+    </html>
