@@ -5746,7 +5746,108 @@ function setupModalListeners() {
     // تطبيق وظيفة السحب والإفلات عند تحميل الصفحة
     setupDragAndDrop();
 }
+    // ============ دالة إزالة المنتجات المكررة ============
+async function removeDuplicateProducts() {
+    console.log('بدء فحص المنتجات المكررة...');
+    
+    // مصفوفة لتخزين المنتجات الفريدة
+    const uniqueProducts = [];
+    // مجموعة لتتبع الأسماء أو المعرفات
+    const seenNames = new Set();
+    const seenIds = new Set();
+    
+    let duplicatesRemoved = 0;
+    
+    // المرور على جميع المنتجات
+    products.forEach(product => {
+        // استخدام الاسم كمفت أساسي للكشف عن التكرار (يمكنك تغييره إلى id إذا أردت)
+        const productName = product.name?.toLowerCase().trim();
+        
+        // إذا كان المنتج بدون اسم، نتخطاه (نادر الحدوث)
+        if (!productName) return;
+        
+        // إذا لم نرَ هذا الاسم من قبل، نضيف المنتج للمصفوفة الجديدة
+        if (!seenNames.has(productName) && !seenIds.has(product.id)) {
+            seenNames.add(productName);
+            seenIds.add(product.id);
+            uniqueProducts.push(product);
+        } else {
+            // هذا منتج مكرر
+            duplicatesRemoved++;
+            console.log(`تم العثور على منتج مكرر: ${product.name} (ID: ${product.id})`);
+        }
+    });
+    
+    // إذا وجدنا تكرارات، نقوم بتحديث المصفوفة وحفظها في قاعدة البيانات
+    if (duplicatesRemoved > 0) {
+        console.log(`تم العثور على ${duplicatesRemoved} منتج(ة) مكرر(ة). جاري الحذف...`);
+        
+        // تحديث مصفوفة المنتجات
+        products = uniqueProducts;
+        
+        // حفظ التغييرات في قاعدة البيانات
+        await saveProductsToFirestore();
+        
+        // تحديث واجهة المستخدم
+        if (currentCategoryView) {
+            loadCategoryProducts();
+        } else {
+            loadProducts();
+        }
+        
+        alert(`✅ تم بنجاح! تم حذف ${duplicatesRemoved} منتج(ة) مكرر(ة).`);
+    } else {
+        console.log('لم يتم العثور على أي منتجات مكررة.');
+        alert('✅ لا توجد منتجات مكررة في النظام.');
+    }
+}
+
+// ============ إضافة زر جديد لحذف التكرارات ============
+function addRemoveDuplicatesButton() {
+    // البحث عن مكان إضافة الزر (بجانب زر إضافة منتج)
+    const productsPage = document.getElementById('productsPage');
+    if (!productsPage) return;
+    
+    // التحقق إذا كان الزر موجوداً بالفعل
+    if (document.getElementById('removeDuplicatesBtn')) return;
+    
+    // إنشاء الزر الجديد
+    const removeBtn = document.createElement('button');
+    removeBtn.id = 'removeDuplicatesBtn';
+    removeBtn.className = 'add-product-btn';
+    removeBtn.style.backgroundColor = '#dc3545'; // لون أحمر
+    removeBtn.style.marginRight = '10px';
+    removeBtn.innerHTML = '<i class="fas fa-eraser"></i> حذف المنتجات المكررة';
+    
+    // إضافة الحدث عند النقر
+    removeBtn.addEventListener('click', async function() {
+        if (confirm('هل أنت متأكد من حذف جميع المنتجات المكررة؟')) {
+            await removeDuplicateProducts();
+        }
+    });
+    
+    // إدراج الزر بعد زر إضافة منتج
+    const addProductBtn = document.getElementById('addProductBtn');
+    if (addProductBtn) {
+        addProductBtn.parentNode.insertBefore(removeBtn, addProductBtn.nextSibling);
+    } else {
+        // إذا لم يكن زر الإضافة موجوداً، نضيف الزر في بداية الصفحة
+        const sectionTitle = productsPage.querySelector('.section-title');
+        if (sectionTitle) {
+            sectionTitle.parentNode.insertBefore(removeBtn, sectionTitle.nextSibling);
+        }
+    }
+}
+
+// ============ استدعاء الدالة بعد تحميل الصفحة ============
+// أضف هذا السطر داخل الدالة initializeSystem أو checkLoginStatus
+// بعد تحميل المنتجات، يمكنك إضافة هذا السطر:
+// addRemoveDuplicatesButton();
+
+// ولكن لتكون الأمور منظمة، أضف هذا الكود في نهاية الدالة initializeSystem
+// أو يمكنك إضافته في أي مكان بعد تحميل المنتجات
 </script>
 
 </body>
     </html>
+
