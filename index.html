@@ -5847,8 +5847,183 @@ addRemoveDuplicatesButton();}
 // ولكن لتكون الأمور منظمة، أضف هذا الكود في نهاية الدالة initializeSystem
 // أو يمكنك إضافته في أي مكان بعد تحميل المنتجات
 </script>
-
+<script>
+// ============ إضافة زر حذف المنتجات المكررة ============
+(function() {
+    // دالة حذف المنتجات المكررة
+    async function removeDuplicateProducts() {
+        console.log('بدء فحص المنتجات المكررة...');
+        
+        // التحقق من وجود المنتجات
+        if (typeof products === 'undefined' || !products || products.length === 0) {
+            alert('لا توجد منتجات في النظام.');
+            return;
+        }
+        
+        const uniqueProducts = [];
+        const seenNames = new Set();
+        const seenIds = new Set();
+        
+        let duplicatesRemoved = 0;
+        let duplicatesList = [];
+        
+        // المرور على جميع المنتجات
+        products.forEach(product => {
+            const productName = product.name?.toLowerCase().trim();
+            
+            if (!productName) return;
+            
+            if (!seenNames.has(productName) && !seenIds.has(product.id)) {
+                seenNames.add(productName);
+                seenIds.add(product.id);
+                uniqueProducts.push(product);
+            } else {
+                duplicatesRemoved++;
+                duplicatesList.push(product.name);
+            }
+        });
+        
+        if (duplicatesRemoved > 0) {
+            console.log(`تم العثور على ${duplicatesRemoved} منتج مكرر:`, duplicatesList);
+            
+            // تحديث مصفوفة المنتجات
+            window.products = uniqueProducts;
+            
+            // حفظ في قاعدة البيانات
+            if (typeof saveProductsToFirestore === 'function') {
+                await saveProductsToFirestore();
+                alert(`✅ تم حذف ${duplicatesRemoved} منتج مكرر بنجاح!`);
+            } else {
+                alert('⚠️ تم العثور على مكررات ولكن دالة الحفظ غير متوفرة.');
+            }
+            
+            // تحديث العرض
+            if (typeof currentCategoryView !== 'undefined' && currentCategoryView) {
+                if (typeof loadCategoryProducts === 'function') loadCategoryProducts();
+            } else {
+                if (typeof loadProducts === 'function') loadProducts();
+            }
+        } else {
+            alert('✅ لا توجد منتجات مكررة في النظام.');
+        }
+    }
+    
+    // دالة إضافة الزر
+    function addCleanupButton() {
+        // انتظر حتى يتم تحميل الصفحة بالكامل
+        setTimeout(function() {
+            const productsPage = document.getElementById('productsPage');
+            if (!productsPage) {
+                console.log('صفحة المنتجات غير موجودة بعد، سيتم المحاولة مرة أخرى...');
+                setTimeout(addCleanupButton, 1000);
+                return;
+            }
+            
+            // البحث عن مكان مناسب للزر
+            const searchContainer = productsPage.querySelector('.search-container');
+            const addProductBtn = document.getElementById('addProductBtn');
+            
+            if (!searchContainer && !addProductBtn) {
+                console.log('لم يتم العثور على مكان مناسب للزر');
+                return;
+            }
+            
+            // التحقق إذا كان الزر موجوداً بالفعل
+            if (document.getElementById('manualRemoveDuplicatesBtn')) return;
+            
+            // إنشاء الزر
+            const cleanBtn = document.createElement('button');
+            cleanBtn.id = 'manualRemoveDuplicatesBtn';
+            cleanBtn.innerHTML = '<i class="fas fa-broom"></i> تنظيف المنتجات المكررة';
+            cleanBtn.style.backgroundColor = '#dc3545';
+            cleanBtn.style.color = 'white';
+            cleanBtn.style.border = 'none';
+            cleanBtn.style.padding = '10px 20px';
+            cleanBtn.style.borderRadius = '8px';
+            cleanBtn.style.cursor = 'pointer';
+            cleanBtn.style.fontSize = '16px';
+            cleanBtn.style.fontWeight = 'bold';
+            cleanBtn.style.marginRight = '10px';
+            cleanBtn.style.marginBottom = '20px';
+            cleanBtn.style.display = 'inline-flex';
+            cleanBtn.style.alignItems = 'center';
+            cleanBtn.style.gap = '8px';
+            
+            // إضافة حدث النقر
+            cleanBtn.onclick = async function() {
+                if (confirm('⚠️ هل أنت متأكد من حذف جميع المنتجات المكررة؟\nسيتم الاحتفاظ بنسخة واحدة فقط من كل منتج.')) {
+                    await removeDuplicateProducts();
+                }
+            };
+            
+            // إضافة الزر في المكان المناسب
+            if (addProductBtn && addProductBtn.parentNode) {
+                // إضافة بجانب زر الإضافة
+                addProductBtn.parentNode.insertBefore(cleanBtn, addProductBtn.nextSibling);
+                console.log('تم إضافة زر التنظيف بجانب زر الإضافة');
+            } else if (searchContainer) {
+                // إضافة قبل حقل البحث
+                searchContainer.parentNode.insertBefore(cleanBtn, searchContainer);
+                console.log('تم إضافة زر التنظيف قبل حقل البحث');
+            }
+            
+            // إضافة بعض التنسيقات الإضافية
+            const style = document.createElement('style');
+            style.textContent = `
+                #manualRemoveDuplicatesBtn:hover {
+                    background-color: #c82333 !important;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+                }
+                #manualRemoveDuplicatesBtn i {
+                    font-size: 18px;
+                }
+            `;
+            document.head.appendChild(style);
+            
+        }, 2000); // انتظر ثانيتين ثم أضف الزر
+    }
+    
+    // تشغيل إضافة الزر بعد تحميل الصفحة
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addCleanupButton);
+    } else {
+        addCleanupButton();
+    }
+    
+    // إضافة الزر أيضاً عند تسجيل الدخول (لأن الصفحة تتغير)
+    const originalLogin = window.login;
+    if (typeof originalLogin === 'function') {
+        window.login = async function() {
+            await originalLogin.apply(this, arguments);
+            setTimeout(addCleanupButton, 1500);
+        };
+    }
+    
+    // مراقبة تغييرات القائمة (عند التنقل بين الصفحات)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                if (target.id === 'productsPage' && target.classList.contains('active')) {
+                    setTimeout(addCleanupButton, 500);
+                }
+            }
+        });
+    });
+    
+    // بدء المراقبة بعد تحميل الصفحة
+    setTimeout(function() {
+        const productsPage = document.getElementById('productsPage');
+        if (productsPage) {
+            observer.observe(productsPage, { attributes: true });
+        }
+    }, 2000);
+    
+})();
+</script>
 </body>
     </html>
+
 
 
