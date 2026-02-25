@@ -377,10 +377,35 @@ header {
     cursor: pointer;
     font-weight: 500;
     transition: transform 0.2s;
+    position: relative;
 }
 
 .submit-btn:active {
     transform: scale(0.98);
+}
+
+.submit-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.submit-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .cancel-btn {
@@ -2069,6 +2094,12 @@ header {
                 <!-- صفحة الفئات -->
                 <div class="page" id="categoriesPage">
                     <h2 class="section-title">إدارة الفئات</h2>
+                    
+                    <!-- زر حفظ ترتيب الفئات الجديد -->
+                    <button class="add-product-btn" id="saveCategoriesOrderBtn" style="background-color: var(--primary-color); margin-bottom: 15px;">
+                        <i class="fas fa-save"></i> حفظ ترتيب الفئات
+                    </button>
+                    
                     <div class="form-container hidden-by-permission" id="categoryFormContainer" data-permission="categories.edit">
                         <h3 id="categoryFormTitle">إضافة فئة جديدة</h3>
                         <form id="categoryForm">
@@ -2146,7 +2177,7 @@ header {
                                     <input type="number" id="couponUsage" min="1" required>
                             </div>
                             <div class="form-buttons">
-                                <button type="submit" class="submit-btn">إضافة الكوبون</button>
+                                <button type="submit" class="submit-btn" id="saveCouponBtn">إضافة الكوبون</button>
                             </div>
                         </form>
                     </div>
@@ -2219,7 +2250,7 @@ header {
                             </div>
                             <div class="image-preview-container" id="slideImagePreview"></div>
                             <div class="form-buttons">
-                                <button type="submit" class="submit-btn">إضافة الصورة</button>
+                                <button type="submit" class="submit-btn" id="addSliderImageBtn">إضافة الصورة</button>
                             </div>
                         </form>
                     </div>
@@ -2689,6 +2720,32 @@ let currentOrdersPage = 1;
 let currentUserOrdersPage = 1;
 let currentAccountsPage = 1;
 let currentSystemAccountsPage = 1;
+
+// متغير لتخزين كائن Sortable للفئات
+let categoriesSortable = null;
+
+// ============ دالة لعرض مؤشر التحميل ومنع الضغط المتكرر ============
+async function withLoading(button, asyncCallback) {
+    if (!button) return;
+    
+    // منع الضغط المتكرر
+    if (button.classList.contains('loading')) {
+        return;
+    }
+    
+    // إضافة كلاس التحميل
+    button.classList.add('loading');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+    
+    try {
+        await asyncCallback();
+    } finally {
+        // إزالة كلاس التحميل بعد الانتهاء
+        button.classList.remove('loading');
+        button.innerHTML = originalText;
+    }
+}
 
 // ============ Initialize System: load data from Firestore ============
 document.addEventListener('DOMContentLoaded', async function() {
@@ -4186,7 +4243,7 @@ async function deleteProduct(productId) {
     }
 }
 
-// ============ وظائف إدارة الفئات ============
+// ============ وظائف إدارة الفئات مع حفظ الترتيب يدوياً ============
 function loadCategories() {
     const categoriesList = document.getElementById('categoriesList');
     if (!categoriesList) return;
@@ -4220,17 +4277,19 @@ function loadCategories() {
         categoriesList.appendChild(categoryItem);
     });
     
+    // إنشاء كائن Sortable جديد إذا كان موجوداً
     if (typeof Sortable !== 'undefined') {
-        new Sortable(categoriesList, {
+        // إذا كان هناك كائن سابق، قم بتدميره
+        if (categoriesSortable) {
+            categoriesSortable.destroy();
+        }
+        
+        // إنشاء كائن Sortable جديد مع تعطيل الحفظ التلقائي
+        categoriesSortable = new Sortable(categoriesList, {
             animation: 150,
             handle: '.drag-handle',
-            onEnd: async function (evt) {
-                const oldIndex = evt.oldIndex;
-                const newIndex = evt.newIndex;
-                const movedItem = categoriesWithImages.splice(oldIndex, 1)[0];
-                categoriesWithImages.splice(newIndex, 0, movedItem);
-                await saveCategoriesToFirestore();
-            }
+            // إزالة الخاصية onEnd التي كانت تحفظ تلقائياً
+            // سيتم الحفظ فقط عند الضغط على زر حفظ ترتيب الفئات
         });
     }
 
@@ -4261,6 +4320,35 @@ function loadCategories() {
             viewCategoryProducts(categoryName);
         });
     });
+}
+
+// دالة جديدة لحفظ ترتيب الفئات
+async function saveCategoriesOrder() {
+    if (!checkPermission('categories', 'edit')) {
+        alert('ليس لديك صلاحية لتعديل الفئات');
+        return;
+    }
+    
+    // الحصول على الترتيب الجديد من DOM
+    const categoriesList = document.getElementById('categoriesList');
+    const categoryItems = categoriesList.querySelectorAll('.category-item');
+    const newOrder = [];
+    
+    categoryItems.forEach(item => {
+        const name = item.dataset.name;
+        const category = categoriesWithImages.find(c => c.name === name);
+        if (category) {
+            newOrder.push(category);
+        }
+    });
+    
+    // تحديث مصفوفة الفئات بالترتيب الجديد
+    categoriesWithImages = newOrder;
+    
+    // حفظ في قاعدة البيانات
+    await saveCategoriesToFirestore();
+    
+    alert('تم حفظ ترتيب الفئات بنجاح!');
 }
 
 function viewCategoryProducts(categoryName) {
@@ -5278,6 +5366,7 @@ function setupEventListeners() {
     const logoutBtn = document.getElementById('logoutBtn');
     const addSystemAccountBtn = document.getElementById('addSystemAccountBtn');
     const systemAccountSearch = document.getElementById('systemAccountSearch');
+    const saveCategoriesOrderBtn = document.getElementById('saveCategoriesOrderBtn');
     
     if (addProductBtn) {
         addProductBtn.addEventListener('click', addProduct);
@@ -5286,7 +5375,7 @@ function setupEventListeners() {
     if (categoryForm) {
         categoryForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            saveCategory();
+            withLoading(document.getElementById('saveCategoryBtn'), saveCategory);
         });
     }
     
@@ -5297,14 +5386,14 @@ function setupEventListeners() {
     if (couponForm) {
         couponForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            saveCoupon();
+            withLoading(document.getElementById('saveCouponBtn'), saveCoupon);
         });
     }
 
     if (sliderForm) {
         sliderForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            addSliderImage();
+            withLoading(document.getElementById('addSliderImageBtn'), addSliderImage);
         });
     }
     
@@ -5409,6 +5498,12 @@ function setupEventListeners() {
         });
     }
     
+    if (saveCategoriesOrderBtn) {
+        saveCategoriesOrderBtn.addEventListener('click', function() {
+            withLoading(saveCategoriesOrderBtn, saveCategoriesOrder);
+        });
+    }
+    
     document.addEventListener('click', function(e) {
         if (e.target.closest('.edit-system-account-btn')) {
             const email = e.target.closest('.edit-system-account-btn').getAttribute('data-email');
@@ -5483,7 +5578,9 @@ function setupModalListeners() {
     }
     
     if (saveProductModalBtn) {
-        saveProductModalBtn.addEventListener('click', saveProduct);
+        saveProductModalBtn.addEventListener('click', function() {
+            withLoading(saveProductModalBtn, saveProduct);
+        });
     }
     
     if (addSpecBtnModal) {
@@ -5558,7 +5655,9 @@ function setupModalListeners() {
     }
     
     if (saveAccountModalBtn) {
-        saveAccountModalBtn.addEventListener('click', saveAccountChanges);
+        saveAccountModalBtn.addEventListener('click', function() {
+            withLoading(saveAccountModalBtn, saveAccountChanges);
+        });
     }
     
     if (deleteAccountModalBtn) {
@@ -5578,7 +5677,9 @@ function setupModalListeners() {
     }
     
     if (saveAddressModalBtn) {
-        saveAddressModalBtn.addEventListener('click', saveAddress);
+        saveAddressModalBtn.addEventListener('click', function() {
+            withLoading(saveAddressModalBtn, saveAddress);
+        });
     }
     
     if (editAccountModalOverlay) {
@@ -5625,7 +5726,9 @@ function setupModalListeners() {
     }
     
     if (saveSystemAccountModalBtn) {
-        saveSystemAccountModalBtn.addEventListener('click', saveSystemAccount);
+        saveSystemAccountModalBtn.addEventListener('click', function() {
+            withLoading(saveSystemAccountModalBtn, saveSystemAccount);
+        });
     }
     
     if (deleteSystemAccountModalBtn) {
@@ -5639,8 +5742,11 @@ function setupModalListeners() {
             }
         });
     }
+    
+    // تطبيق وظيفة السحب والإفلات عند تحميل الصفحة
+    setupDragAndDrop();
 }
 </script>
 
 </body>
-</html>
+    </html>
