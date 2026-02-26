@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
-       /* جميع الأنماط السابقة كما هي، لم يتم تغيير أي شيء */
+        /* جميع الأنماط السابقة كما هي، لم يتم تغيير أي شيء */
 :root {
     --primary-color: #0074D9;
     --secondary-color: #2C3E50;
@@ -1148,13 +1148,11 @@ header {
     margin-bottom: 5px;
 }
 
-.account-email {
+.account-phone {
     font-size: 14px;
     color: #666;
     direction: ltr;
     text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .account-card-body {
@@ -1275,13 +1273,6 @@ header {
     margin-bottom: 5px;
 }
 
-.user-email-large {
-    font-size: 16px;
-    color: #666;
-    direction: ltr;
-    text-align: left;
-}
-
 .user-phone-large {
     font-size: 16px;
     color: #666;
@@ -1397,6 +1388,7 @@ header {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .order-status-select {
@@ -1436,10 +1428,31 @@ header {
     cursor: pointer;
     font-size: 14px;
     transition: transform 0.2s;
+    position: relative;
 }
 
 .update-status-btn:active {
     transform: scale(0.95);
+}
+
+.update-status-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.update-status-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.6s linear infinite;
 }
 
 /* أنماط معاينة الصور */
@@ -2190,7 +2203,7 @@ header {
                 <div class="page" id="ordersPage">
                     <h2 class="section-title">إدارة الطلبات</h2>
                     <div class="search-orders-container">
-                        <input type="text" id="orderSearch" class="search-orders-input" placeholder="ابحث عن طلب برقم الطلب، الاسم، الهاتف أو البريد الإلكتروني...">
+                        <input type="text" id="orderSearch" class="search-orders-input" placeholder="ابحث عن طلب برقم الطلب، الاسم، الهاتف...">
                     </div>
                     <div class="orders-list" id="ordersList">
                         <p style="text-align: center; padding: 20px;">
@@ -2264,7 +2277,7 @@ header {
                     <h2 class="section-title">إدارة حسابات العملاء</h2>
                     
                     <div class="search-container">
-                        <input type="text" id="accountSearch" placeholder="ابحث عن حساب بالاسم أو البريد الإلكتروني...">
+                        <input type="text" id="accountSearch" placeholder="ابحث عن حساب بالاسم أو رقم الهاتف...">
                     </div>
                     
                     <div class="accounts-grid" id="accountsGrid">
@@ -2503,10 +2516,6 @@ header {
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="editAccountEmailDisplayModal">البريد الإلكتروني</label>
-                                <input type="email" id="editAccountEmailDisplayModal" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
-                            </div>
-                            <div class="form-group">
                                 <label for="editAccountPhoneModal">رقم الهاتف</label>
                                 <input type="tel" id="editAccountPhoneModal" pattern="[0-9]{10}" title="يجب أن يتكون رقم الهاتف من 10 خانات" required>
                             </div>
@@ -2553,54 +2562,39 @@ header {
                                 <select id="addAddressCityModal" required>
                                     <option value="">اختر المدينة</option>
                                     <option value="بنغازي">بنغازي</option>
-                            <option value="طرابلس">طرابلس</option>
-                            <option value="مصراتة">مصراتة</option>
-                            <option value="الزاوية">الزاوية</option>
-                            <option value="الخمس">الخمس</option>
-                            <option value="زليتن">زليتن</option>
-                            <option value="سبها">سبها</option>
-                            <option value="غريان">غريان</option>
-                            <option value="درنة">درنة</option>
-                            <option value="بيضاء">بيضاء</option>
-                            <option value="اجدابيا">اجدابيا</option>
-                            <option value="الكفرة">الكفرة</option>
-                            <option value="سرت">سرت</option>
-                            <option value="بنى وليد">بنى وليد</option>
-                            <option value="ترهونة">ترهونة</option>
-                            <option value="مسلاتة">مسلاتة</option>
-                            
-                                 
-                            
-                            
-                            <option value="غدامس">غدامس</option>
-                            <option value="الجفرة">الجفرة</option>
-                            
-                            <option value="الجبل الغربي">الجبل الغربي</option>
-                            
-                            
-                            <option value="الزنتان">الزنتان</option>
-                            <option value="العجيلات">العجيلات</option>
-                            <option value="صبراتة">صبراتة</option>
-                            
-                            <option value="العزيزية">العزيزية</option>
-                            <option value="تاجوراء">تاجوراء</option>
-                            
-                            <option value="العقورية">العقورية</option>
-                            <option value="البيضاء">البيضاء</option>
-                            <option value="شحات">شحات</option>
-                            <option value="درنة">درنة</option>
-                            <option value="طبرق">طبرق</option>
-                            <option value="الأبيار">الأبيار</option>
-                            <option value="القبة">القبة</option>
-                            <option value="مرادة">مرادة</option>
-                            <option value="سلوق">سلوق</option>
-                            <option value="سبيعة">قمينس</option>
-                            <option value="زوارة">زوارة</option>
-                            <option value="صبراتة">صبراتة</option>
-                            
-                        
-                    
-                     </div>
+                                    <option value="طرابلس">طرابلس</option>
+                                    <option value="مصراتة">مصراتة</option>
+                                    <option value="الزاوية">الزاوية</option>
+                                    <option value="الخمس">الخمس</option>
+                                    <option value="زليتن">زليتن</option>
+                                    <option value="سبها">سبها</option>
+                                    <option value="غريان">غريان</option>
+                                    <option value="درنة">درنة</option>
+                                    <option value="البيضاء">البيضاء</option>
+                                    <option value="اجدابيا">اجدابيا</option>
+                                    <option value="الكفرة">الكفرة</option>
+                                    <option value="سرت">سرت</option>
+                                    <option value="بني وليد">بني وليد</option>
+                                    <option value="ترهونة">ترهونة</option>
+                                    <option value="مسلاتة">مسلاتة</option>
+                                    <option value="غدامس">غدامس</option>
+                                    <option value="الجفرة">الجفرة</option>
+                                    <option value="الجبل الغربي">الجبل الغربي</option>
+                                    <option value="الزنتان">الزنتان</option>
+                                    <option value="العجيلات">العجيلات</option>
+                                    <option value="صبراتة">صبراتة</option>
+                                    <option value="العزيزية">العزيزية</option>
+                                    <option value="تاجوراء">تاجوراء</option>
+                                    <option value="شحات">شحات</option>
+                                    <option value="طبرق">طبرق</option>
+                                    <option value="الأبيار">الأبيار</option>
+                                    <option value="القبة">القبة</option>
+                                    <option value="مرادة">مرادة</option>
+                                    <option value="سلوق">سلوق</option>
+                                    <option value="قمينس">قمينس</option>
+                                    <option value="زوارة">زوارة</option>
+                                </select>
+                            </div>
                             <div class="form-group">
                                 <label for="addAddressDetailsModal">العنوان التفصيلي</label>
                                 <textarea id="addAddressDetailsModal" required rows="3"></textarea>
@@ -2767,29 +2761,8 @@ async function initializeSystem() {
 
     listenToOrders();
 
-    if (systemAccounts.length === 0) {
-        const defaultAccount = {
-            email: "admin@atlas.ly",
-            password: "admin123",
-            permissions: {
-                products: { view: true, edit: true, delete: true },
-                categories: { view: true, edit: true, delete: true },
-                coupons: { view: true, edit: true, delete: true },
-                orders: { view: true, edit: true, delete: true },
-                slider: { view: true, edit: true, delete: true },
-                accounts: { view: true, edit: true, delete: true },
-                systemAccounts: { view: true, edit: true, delete: true }
-            }
-        };
-        systemAccounts.push(defaultAccount);
-        await setFirestoreData('systemAccounts', systemAccounts);
-
-        try {
-            await auth.createUserWithEmailAndPassword(defaultAccount.email, defaultAccount.password);
-        } catch (error) {
-            console.error("Error creating default auth user:", error);
-        }
-    }
+    // لم نعد نضيف حساب افتراضي
+    // سيتم إنشاء أول حساب يدوياً عبر واجهة إدارة حسابات المنظومة
 
     updateCustomerProducts();
     updateCustomerCategories();
@@ -3277,7 +3250,6 @@ function loadAccounts(searchTerm = '', page = 1) {
     
     const filteredUsers = users.filter(user => 
         `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (user.phone && user.phone.includes(searchTerm))
     );
     
@@ -3315,17 +3287,17 @@ function loadAccounts(searchTerm = '', page = 1) {
     
     document.querySelectorAll('#accountsPage .edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const email = this.getAttribute('data-email');
-            openEditAccountModal(email);
+            const phone = this.getAttribute('data-phone');
+            openEditAccountModal(phone);
         });
     });
     
     document.querySelectorAll('#accountsPage .delete-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const email = this.getAttribute('data-email');
+            const phone = this.getAttribute('data-phone');
             if (checkPermission('accounts', 'delete')) {
                 if (confirm('هل أنت متأكد من حذف هذا الحساب؟')) {
-                    deleteAccountByEmail(email);
+                    deleteAccountByPhone(phone);
                 }
             } else {
                 alert('ليس لديك صلاحية لحذف حسابات العملاء');
@@ -3335,8 +3307,8 @@ function loadAccounts(searchTerm = '', page = 1) {
     
     document.querySelectorAll('#accountsPage .user-orders-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const email = this.getAttribute('data-email');
-            viewUserOrders(email);
+            const phone = this.getAttribute('data-phone');
+            viewUserOrders(phone);
         });
     });
     
@@ -3351,7 +3323,7 @@ function createAccountCard(user) {
     const lastNameChar = user.lastName ? user.lastName.charAt(0) : 'S';
     const avatarText = firstNameChar + lastNameChar;
     
-    const userOrders = orders.filter(order => order.customer && order.customer.email === user.email);
+    const userOrders = orders.filter(order => order.customer && order.customer.phone === user.phone);
     const pendingOrders = userOrders.filter(order => order.status === 'pending').length;
     
     const addressesCount = user.addresses ? user.addresses.length : 0;
@@ -3374,15 +3346,11 @@ function createAccountCard(user) {
             <div class="account-avatar">${avatarText}</div>
             <div class="account-info-summary">
                 <div class="account-name">${user.firstName || ''} ${user.lastName || ''}</div>
-                <div class="account-email">${user.email || ''}</div>
+                <div class="account-phone">${user.phone || ''}</div>
             </div>
         </div>
         <div class="account-card-body">
             <div class="account-details">
-                <div class="account-detail-item">
-                    <span class="account-detail-label">رقم الهاتف:</span>
-                    <span class="account-detail-value">${user.phone || 'غير محدد'}</span>
-                </div>
                 <div class="account-detail-item">
                     <span class="account-detail-label">عدد الطلبات:</span>
                     <span class="account-detail-value">${userOrders.length} طلب</span>
@@ -3402,23 +3370,23 @@ function createAccountCard(user) {
             </div>
         </div>
         <div class="account-card-footer">
-            <button class="user-orders-btn" data-email="${user.email || ''}">
+            <button class="user-orders-btn" data-phone="${user.phone || ''}">
                 <i class="fas fa-box"></i> طلبات هذا الحساب
             </button>
-            ${checkPermission('accounts', 'edit') ? `<button class="action-btn edit-btn" data-email="${user.email || ''}">تعديل</button>` : ''}
-            ${checkPermission('accounts', 'delete') ? `<button class="action-btn delete-btn" data-email="${user.email || ''}">حذف</button>` : ''}
+            ${checkPermission('accounts', 'edit') ? `<button class="action-btn edit-btn" data-phone="${user.phone || ''}">تعديل</button>` : ''}
+            ${checkPermission('accounts', 'delete') ? `<button class="action-btn delete-btn" data-phone="${user.phone || ''}">حذف</button>` : ''}
         </div>
     `;
     return card;
 }
 
-function openEditAccountModal(email) {
+function openEditAccountModal(phone) {
     if (!checkPermission('accounts', 'edit')) {
         alert('ليس لديك صلاحية لتعديل حسابات العملاء');
         return;
     }
     
-    const user = users.find(u => u.email === email);
+    const user = users.find(u => u.phone === phone);
     if (!user) {
         alert('لم يتم العثور على المستخدم');
         return;
@@ -3427,30 +3395,19 @@ function openEditAccountModal(email) {
     currentUserView = user;
     
     const editAccountModalTitle = document.getElementById('editAccountModalTitle');
-    const editAccountEmailModal = document.getElementById('editAccountEmailModal');
     const editAccountFirstNameModal = document.getElementById('editAccountFirstNameModal');
     const editAccountLastNameModal = document.getElementById('editAccountLastNameModal');
-    const editAccountEmailDisplayModal = document.getElementById('editAccountEmailDisplayModal');
     const editAccountPhoneModal = document.getElementById('editAccountPhoneModal');
     const editAccountPasswordModal = document.getElementById('editAccountPasswordModal');
     
     if (editAccountModalTitle) {
         editAccountModalTitle.textContent = `تعديل حساب ${user.firstName || ''} ${user.lastName || ''}`;
     }
-    if (editAccountEmailModal) {
-        editAccountEmailModal.value = user.email || '';
-    }
     if (editAccountFirstNameModal) {
         editAccountFirstNameModal.value = user.firstName || '';
     }
     if (editAccountLastNameModal) {
         editAccountLastNameModal.value = user.lastName || '';
-    }
-    if (editAccountEmailDisplayModal) {
-        editAccountEmailDisplayModal.value = user.email || '';
-        editAccountEmailDisplayModal.readOnly = true;
-        editAccountEmailDisplayModal.style.backgroundColor = '#f8f9fa';
-        editAccountEmailDisplayModal.style.cursor = 'not-allowed';
     }
     if (editAccountPhoneModal) {
         editAccountPhoneModal.value = user.phone || '';
@@ -3518,7 +3475,7 @@ function deleteAddressFromUser(index) {
         currentUserView.addresses.splice(index, 1);
         loadAddressesInEditModal(currentUserView.addresses);
         
-        const userIndex = users.findIndex(u => u.email === currentUserView.email);
+        const userIndex = users.findIndex(u => u.phone === currentUserView.phone);
         if (userIndex !== -1) {
             users[userIndex].addresses = currentUserView.addresses;
             saveUsersToFirestore();
@@ -3565,7 +3522,7 @@ async function saveAccountChanges() {
         return;
     }
     
-    const userIndex = users.findIndex(u => u.email === currentUserView.email);
+    const userIndex = users.findIndex(u => u.phone === currentUserView.phone);
     if (userIndex !== -1) {
         users[userIndex].firstName = firstName;
         users[userIndex].lastName = lastName;
@@ -3580,7 +3537,7 @@ async function saveAccountChanges() {
         await saveUsersToFirestore();
         
         orders.forEach(order => {
-            if (order.customer && order.customer.email === currentUserView.email) {
+            if (order.customer && order.customer.phone === currentUserView.phone) {
                 order.customer.name = `${firstName} ${lastName}`;
                 order.customer.phone = phone;
             }
@@ -3603,20 +3560,20 @@ async function deleteAccount() {
     if (!currentUserView) return;
     
     if (confirm(`هل أنت متأكد من حذف حساب ${currentUserView.firstName} ${currentUserView.lastName}؟ سيتم حذف جميع بياناته بما في ذلك الطلبات المرتبطة به.`)) {
-        await deleteAccountByEmail(currentUserView.email);
+        await deleteAccountByPhone(currentUserView.phone);
     }
 }
 
-async function deleteAccountByEmail(email) {
-    users = users.filter(u => u.email !== email);
+async function deleteAccountByPhone(phone) {
+    users = users.filter(u => u.phone !== phone);
     await saveUsersToFirestore();
     
-    orders = orders.filter(order => order.customer && order.customer.email !== email);
+    orders = orders.filter(order => order.customer && order.customer.phone !== phone);
     await saveOrdersToFirestore();
     
     alert('تم حذف الحساب بنجاح.');
     
-    if (currentUserView && currentUserView.email === email) {
+    if (currentUserView && currentUserView.phone === phone) {
         closeEditAccountModal();
     }
     
@@ -3624,8 +3581,8 @@ async function deleteAccountByEmail(email) {
     loadOrders();
 }
 
-function viewUserOrders(email) {
-    const user = users.find(u => u.email === email);
+function viewUserOrders(phone) {
+    const user = users.find(u => u.phone === phone);
     if (!user) return;
     
     currentUserView = user;
@@ -3641,7 +3598,6 @@ function viewUserOrders(email) {
             <div class="user-avatar-large">${avatarText}</div>
             <div class="user-details-large">
                 <div class="user-name-large">${user.firstName || ''} ${user.lastName || ''}</div>
-                <div class="user-email-large">${user.email || ''}</div>
                 <div class="user-phone-large">${user.phone || ''}</div>
             </div>
         `;
@@ -3670,7 +3626,7 @@ function loadUserOrders(searchTerm = '', page = 1) {
     if (!currentUserView) return;
     
     const userOrders = orders.filter(order => 
-        order.customer && order.customer.email === currentUserView.email &&
+        order.customer && order.customer.phone === currentUserView.phone &&
         (order.id.toString().includes(searchTerm) ||
         (order.customer.name && order.customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (order.customer.phone && order.customer.phone.includes(searchTerm)))
@@ -3753,6 +3709,8 @@ function loadUserOrders(searchTerm = '', page = 1) {
                 <div><strong>الهاتف:</strong> ${order.customer.phone || ''}</div>
                 <div><strong>المدينة:</strong> ${order.customer.city || ''}</div>
                 <div><strong>العنوان:</strong> ${order.customer.address || ''}</div>
+                ${order.deliveryMethod ? `<div><strong>طريقة الاستلام:</strong> ${order.deliveryMethod === 'delivery' ? 'توصيل' : 'حجز'}</div>` : ''}
+                ${order.notes ? `<div><strong>ملاحظات:</strong> ${order.notes}</div>` : ''}
             </div>
             ${couponInfo}
             ${orderDetailsBoxes}
@@ -3783,7 +3741,8 @@ function loadUserOrders(searchTerm = '', page = 1) {
             const orderId = parseInt(this.getAttribute('data-id'));
             const select = document.querySelector(`.order-status-select[data-id="${orderId}"]`);
             const newStatus = select.value;
-            updateOrderStatus(orderId, newStatus);
+            // استخدام withLoading لمنع الضغط المتكرر
+            withLoading(this, () => updateOrderStatus(orderId, newStatus));
         });
     });
     
@@ -3804,7 +3763,7 @@ function openAddAddressModal() {
     
     const addAddressForEmailModal = document.getElementById('addAddressForEmailModal');
     if (addAddressForEmailModal && currentUserView) {
-        addAddressForEmailModal.value = currentUserView.email;
+        addAddressForEmailModal.value = currentUserView.phone;
     }
     
     const modalOverlay = document.getElementById('addAddressModalOverlay');
@@ -3830,7 +3789,7 @@ async function saveAddress() {
     
     const city = document.getElementById('addAddressCityModal')?.value.trim();
     const addressDetails = document.getElementById('addAddressDetailsModal')?.value.trim();
-    const email = document.getElementById('addAddressForEmailModal')?.value;
+    const phone = document.getElementById('addAddressForEmailModal')?.value;
     
     if (!city || !addressDetails) {
         alert('الرجاء ملء جميع الحقول.');
@@ -3845,7 +3804,7 @@ async function saveAddress() {
         }
         currentUserView.addresses.push(newAddress);
         
-        const userIndex = users.findIndex(u => u.email === email);
+        const userIndex = users.findIndex(u => u.phone === phone);
         if (userIndex !== -1) {
             if (!users[userIndex].addresses) {
                 users[userIndex].addresses = [];
@@ -4688,8 +4647,7 @@ function loadOrders(searchTerm = '', page = 1) {
     const filteredOrders = orders.filter(order => 
         order.id.toString().includes(searchTerm) ||
         (order.customer.name && order.customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (order.customer.phone && order.customer.phone.includes(searchTerm)) ||
-        (order.customer.email && order.customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        (order.customer.phone && order.customer.phone.includes(searchTerm))
     );
     
     if (filteredOrders.length === 0) {
@@ -4765,9 +4723,10 @@ function loadOrders(searchTerm = '', page = 1) {
             <div class="order-customer">
                 <div><strong>العميل:</strong> ${order.customer.name || ''}</div>
                 <div><strong>الهاتف:</strong> ${order.customer.phone || ''}</div>
-                <div><strong>البريد الإلكتروني:</strong> ${order.customer.email || ''}</div>
                 <div><strong>المدينة:</strong> ${order.customer.city || ''}</div>
                 <div><strong>العنوان:</strong> ${order.customer.address || ''}</div>
+                ${order.deliveryMethod ? `<div><strong>طريقة الاستلام:</strong> ${order.deliveryMethod === 'delivery' ? 'توصيل' : 'حجز'}</div>` : ''}
+                ${order.notes ? `<div><strong>ملاحظات:</strong> ${order.notes}</div>` : ''}
             </div>
             ${couponInfo}
             ${orderDetailsBoxes}
@@ -4798,7 +4757,8 @@ function loadOrders(searchTerm = '', page = 1) {
             const orderId = parseInt(this.getAttribute('data-id'));
             const select = document.querySelector(`.order-status-select[data-id="${orderId}"]`);
             const newStatus = select.value;
-            updateOrderStatus(orderId, newStatus);
+            // استخدام withLoading لمنع الضغط المتكرر
+            withLoading(this, () => updateOrderStatus(orderId, newStatus));
         });
     });
     
@@ -5518,15 +5478,15 @@ function setupEventListeners() {
         }
         
         if (e.target.closest('#accountsPage .edit-btn')) {
-            const email = e.target.closest('#accountsPage .edit-btn').getAttribute('data-email');
-            openEditAccountModal(email);
+            const phone = e.target.closest('#accountsPage .edit-btn').getAttribute('data-phone');
+            openEditAccountModal(phone);
         }
         
         if (e.target.closest('#accountsPage .delete-btn')) {
-            const email = e.target.closest('#accountsPage .delete-btn').getAttribute('data-email');
+            const phone = e.target.closest('#accountsPage .delete-btn').getAttribute('data-phone');
             if (checkPermission('accounts', 'delete')) {
                 if (confirm('هل أنت متأكد من حذف هذا الحساب؟')) {
-                    deleteAccountByEmail(email);
+                    deleteAccountByPhone(phone);
                 }
             } else {
                 alert('ليس لديك صلاحية لحذف حسابات العملاء');
@@ -5534,8 +5494,8 @@ function setupEventListeners() {
         }
         
         if (e.target.closest('#accountsPage .user-orders-btn')) {
-            const email = e.target.closest('#accountsPage .user-orders-btn').getAttribute('data-email');
-            viewUserOrders(email);
+            const phone = e.target.closest('#accountsPage .user-orders-btn').getAttribute('data-phone');
+            viewUserOrders(phone);
         }
     });
 }
@@ -5747,238 +5707,7 @@ function setupModalListeners() {
     setupDragAndDrop();
 }
     
-// ============ كود تنظيف المنتجات المكررة مع الحفظ الإجباري في قاعدة البيانات ============
-(function() {
-    // دالة للتأكد من وجود Firebase
-    function waitForFirebase() {
-        return new Promise((resolve) => {
-            if (typeof db !== 'undefined' && db) {
-                resolve();
-            } else {
-                setTimeout(() => waitForFirebase().then(resolve), 500);
-            }
-        });
-    }
-
-    // دالة حذف المنتجات المكررة مع الحفظ المباشر في Firestore
-    window.forceCleanDuplicates = async function() {
-        console.log('🔍 بدء عملية التنظيف القوية...');
-        
-        // التأكد من وجود المنتجات
-        if (typeof products === 'undefined' || !products || products.length === 0) {
-            alert('❌ لا توجد منتجات في النظام.');
-            return;
-        }
-        
-        // عرض عدد المنتجات قبل التنظيف
-        console.log(`📊 عدد المنتجات قبل التنظيف: ${products.length}`);
-        
-        // إنشاء خريطة للمنتجات الفريدة (باستخدام الاسم كمفتاح)
-        const uniqueProductMap = new Map();
-        const duplicates = [];
-        
-        // المرور على جميع المنتجات
-        products.forEach(product => {
-            const productName = product.name?.toLowerCase().trim() || 'بدون اسم';
-            const productKey = productName; // يمكنك تغيير هذا إلى product.id إذا أردت
-            
-            if (!uniqueProductMap.has(productKey)) {
-                // أول مرة نرى هذا المنتج - نحتفظ به
-                uniqueProductMap.set(productKey, product);
-            } else {
-                // هذا منتج مكرر - نسجله
-                duplicates.push({
-                    name: product.name,
-                    id: product.id,
-                    kept: uniqueProductMap.get(productKey).id
-                });
-            }
-        });
-        
-        // تحويل الخريطة إلى مصفوفة
-        const newProducts = Array.from(uniqueProductMap.values());
-        
-        console.log(`📊 عدد المنتجات بعد التنظيف: ${newProducts.length}`);
-        console.log(`🗑️ عدد المنتجات المكررة المحذوفة: ${products.length - newProducts.length}`);
-        
-        if (duplicates.length > 0) {
-            console.log('📋 قائمة المنتجات المكررة:', duplicates);
-            
-            // تأكيد مع المستخدم
-            if (!confirm(`✅ تم العثور على ${products.length - newProducts.length} منتج مكرر.\nهل تريد حذفهم نهائياً من قاعدة البيانات؟`)) {
-                return;
-            }
-            
-            try {
-                // 1. تحديث المتغير العام
-                window.products = newProducts;
-                
-                // 2. التأكد من وجود Firebase
-                await waitForFirebase();
-                
-                // 3. حفظ مباشر في Firestore باستخدام batch
-                console.log('💾 جاري الحفظ في Firestore...');
-                
-                const batch = db.batch();
-                const collectionRef = db.collection('products');
-                
-                // مسح المجموعة بالكامل
-                const snapshot = await collectionRef.get();
-                snapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                
-                // إضافة المنتجات الجديدة
-                newProducts.forEach(product => {
-                    const docRef = collectionRef.doc(); // إنشاء مستند جديد ب ID تلقائي
-                    batch.set(docRef, product);
-                });
-                
-                // تنفيذ batch
-                await batch.commit();
-                
-                console.log('✅ تم الحفظ بنجاح في Firestore');
-                
-                // 4. تحديث localStorage كنسخة احتياطية
-                localStorage.setItem('products', JSON.stringify(newProducts));
-                
-                // 5. تحديث واجهة المستخدم
-                if (typeof loadProducts === 'function') {
-                    loadProducts();
-                }
-                
-                // 6. تحديث المنتجات في المتجر (للعميل)
-                if (typeof updateCustomerProducts === 'function') {
-                    updateCustomerProducts();
-                }
-                
-                alert(`✅ تم بنجاح!\nتم حذف ${products.length - newProducts.length} منتج مكرر.\nالعدد الحالي: ${newProducts.length} منتج.`);
-                
-                // 7. إعادة تحميل الصفحة بعد ثانيتين للتأكد
-                setTimeout(() => {
-                    if (confirm('🔄 هل تريد إعادة تحميل الصفحة لتأكيد التغييرات؟')) {
-                        location.reload();
-                    }
-                }, 1000);
-                
-            } catch (error) {
-                console.error('❌ خطأ في الحفظ:', error);
-                alert('❌ حدث خطأ في الحفظ: ' + error.message);
-            }
-            
-        } else {
-            alert('✅ لا توجد منتجات مكررة في النظام.');
-        }
-    };
-    
-    // دالة إضافة الزر
-    function addCleaningButton() {
-        // البحث عن مكان إضافة الزر
-        const productsPage = document.getElementById('productsPage');
-        if (!productsPage) {
-            setTimeout(addCleaningButton, 1000);
-            return;
-        }
-        
-        // التحقق من وجود الزر مسبقاً
-        if (document.getElementById('forceCleanDuplicatesBtn')) return;
-        
-        // إنشاء الزر
-        const cleanBtn = document.createElement('button');
-        cleanBtn.id = 'forceCleanDuplicatesBtn';
-        cleanBtn.innerHTML = '<i class="fas fa-trash-alt"></i> 🧹 تنظيف وحذف المكررات (قوي)';
-        cleanBtn.style.backgroundColor = '#dc3545';
-        cleanBtn.style.color = 'white';
-        cleanBtn.style.border = 'none';
-        cleanBtn.style.padding = '12px 25px';
-        cleanBtn.style.borderRadius = '8px';
-        cleanBtn.style.cursor = 'pointer';
-        cleanBtn.style.fontSize = '16px';
-        cleanBtn.style.fontWeight = 'bold';
-        cleanBtn.style.margin = '10px 0 20px 0';
-        cleanBtn.style.display = 'inline-block';
-        cleanBtn.style.boxShadow = '0 4px 6px rgba(220, 53, 69, 0.3)';
-        cleanBtn.style.transition = 'all 0.3s';
-        
-        // تأثير hover
-        cleanBtn.onmouseover = function() {
-            this.style.backgroundColor = '#c82333';
-            this.style.transform = 'translateY(-2px)';
-            this.style.boxShadow = '0 6px 12px rgba(220, 53, 69, 0.4)';
-        };
-        cleanBtn.onmouseout = function() {
-            this.style.backgroundColor = '#dc3545';
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '0 4px 6px rgba(220, 53, 69, 0.3)';
-        };
-        
-        // إضافة حدث النقر
-        cleanBtn.onclick = window.forceCleanDuplicates;
-        
-        // إضافة الزر في المكان المناسب
-        const addProductBtn = document.getElementById('addProductBtn');
-        if (addProductBtn && addProductBtn.parentNode) {
-            // إنشاء حاوية للزرين
-            const buttonContainer = document.createElement('div');
-            buttonContainer.style.display = 'flex';
-            buttonContainer.style.gap = '10px';
-            buttonContainer.style.alignItems = 'center';
-            buttonContainer.style.marginBottom = '20px';
-            buttonContainer.style.flexWrap = 'wrap';
-            
-            // نقل زر الإضافة إلى الحاوية
-            addProductBtn.parentNode.insertBefore(buttonContainer, addProductBtn);
-            buttonContainer.appendChild(addProductBtn);
-            buttonContainer.appendChild(cleanBtn);
-        } else {
-            // إذا لم نجد زر الإضافة، نضيف الزر قبل حقل البحث
-            const searchContainer = productsPage.querySelector('.search-container');
-            if (searchContainer) {
-                searchContainer.parentNode.insertBefore(cleanBtn, searchContainer);
-            } else {
-                // آخر خيار - نضيفه في بداية الصفحة
-                const sectionTitle = productsPage.querySelector('.section-title');
-                if (sectionTitle) {
-                    sectionTitle.parentNode.insertBefore(cleanBtn, sectionTitle.nextSibling);
-                }
-            }
-        }
-        
-        console.log('✅ تم إضافة زر التنظيف بنجاح');
-    }
-    
-    // تشغيل إضافة الزر عند تحميل الصفحة
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addCleaningButton);
-    } else {
-        addCleaningButton();
-    }
-    
-    // مراقبة تغيير الصفحات
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                const page = mutation.target;
-                if (page.id === 'productsPage' && page.classList.contains('active')) {
-                    setTimeout(addCleaningButton, 500);
-                }
-            }
-        });
-    });
-    
-    // بدء المراقبة
-    setTimeout(() => {
-        const productsPage = document.getElementById('productsPage');
-        if (productsPage) {
-            observer.observe(productsPage, { attributes: true });
-        }
-    }, 2000);
-    
-})();
-
 </script>
 
 </body>
-    </html>
-
-
+</html>
