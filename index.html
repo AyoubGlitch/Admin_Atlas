@@ -2722,10 +2722,12 @@ let categoriesSortable = null;
 async function withLoading(button, asyncCallback) {
     if (!button) return;
     
+    // منع الضغط المتكرر
     if (button.classList.contains('loading')) {
         return;
     }
     
+    // إضافة كلاس التحميل
     button.classList.add('loading');
     const originalText = button.innerHTML;
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
@@ -2733,6 +2735,7 @@ async function withLoading(button, asyncCallback) {
     try {
         await asyncCallback();
     } finally {
+        // إزالة كلاس التحميل بعد الانتهاء
         button.classList.remove('loading');
         button.innerHTML = originalText;
     }
@@ -2752,30 +2755,14 @@ async function initializeSystem() {
     categoriesWithImages = await getFirestoreData('categories');
     coupons = await getFirestoreData('coupons');
     orders = await getFirestoreData('orders');
-    
-    // ترقية بيانات السلايدر القديمة إلى الهيكل الجديد
-    let loadedSliderData = await getFirestoreData('sliderImages');
-    if (loadedSliderData && loadedSliderData.length > 0) {
-        if (typeof loadedSliderData[0] === 'string') {
-            console.log("ترقية بيانات السلايدر القديمة إلى الهيكل الجديد...");
-            sliderImages = loadedSliderData.map((url, index) => ({
-                id: `legacy-${Date.now()}-${index}`,
-                url: url,
-                visible: true,
-                order: index
-            }));
-            await saveSliderToFirestore();
-        } else {
-            sliderImages = loadedSliderData;
-        }
-    } else {
-        sliderImages = [];
-    }
-
+    sliderImages = await getFirestoreData('sliderImages');
     users = await getFirestoreData('users');
     systemAccounts = await getFirestoreData('systemAccounts');
 
     listenToOrders();
+
+    // لم نعد نضيف حساب افتراضي
+    // سيتم إنشاء أول حساب يدوياً عبر واجهة إدارة حسابات المنظومة
 
     updateCustomerProducts();
     updateCustomerCategories();
@@ -3754,6 +3741,7 @@ function loadUserOrders(searchTerm = '', page = 1) {
             const orderId = parseInt(this.getAttribute('data-id'));
             const select = document.querySelector(`.order-status-select[data-id="${orderId}"]`);
             const newStatus = select.value;
+            // استخدام withLoading لمنع الضغط المتكرر
             withLoading(this, () => updateOrderStatus(orderId, newStatus));
         });
     });
@@ -3841,6 +3829,7 @@ function loadProducts(searchTerm = '', page = 1) {
     productsGrid.innerHTML = '';
     currentProductsPage = page;
 
+    // فلترة المنتجات بناءً على البحث
     let filteredProducts = products.filter(product => 
         product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -3870,6 +3859,7 @@ function loadProducts(searchTerm = '', page = 1) {
         });
     }
 
+    // إعادة ربط الأزرار
     document.querySelectorAll('#productsPage .edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const productId = parseInt(this.getAttribute('data-id'));
@@ -3889,11 +3879,13 @@ function loadProducts(searchTerm = '', page = 1) {
     });
 }
 
+// دالة إنشاء بطاقة المنتج (موحدة لجميع الصفحات) - تم إزالة أيقونة السحب
 function createProductCard(product) {
     const card = document.createElement('div');
     card.className = 'product-card';
     card.dataset.id = product.id;
 
+    // تحديد حالة الكمية
     let quantityClass = 'quantity-ok';
     let quantityStatus = `${product.quantity || 0} قطعة`;
     if (product.quantity <= 0) {
@@ -3903,8 +3895,10 @@ function createProductCard(product) {
         quantityClass = 'quantity-low';
     }
 
+    // صورة افتراضية إذا لم توجد صور
     const imageUrl = product.images && product.images[0] ? product.images[0] : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNGMEYwRjAiLz48cGF0aCBkPSJNMjAgMjBMNDAgMjBMNDAgNDBMMjAgNDBMMjAgMjBaIiBmaWxsPSIjQ0NDQ0NDIi8+PHBhdGggZD0iTTI1IDI1TDM1IDM1IiBzdHJva2U9IiM5OTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTM1IDI1TDI1IDM1IiBzdHJva2U9IiM5OTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+PC9zdmc+';
 
+    // بناء HTML البطاقة بشكل أفقي (تم إزالة <i class="fas fa-ellipsis-v drag-handle"></i>)
     card.innerHTML = `
         <div class="category-details">
             <div class="category-image-thumb" style="background-image: url('${imageUrl}');"></div>
@@ -4242,14 +4236,19 @@ function loadCategories() {
         categoriesList.appendChild(categoryItem);
     });
     
+    // إنشاء كائن Sortable جديد إذا كان موجوداً
     if (typeof Sortable !== 'undefined') {
+        // إذا كان هناك كائن سابق، قم بتدميره
         if (categoriesSortable) {
             categoriesSortable.destroy();
         }
         
+        // إنشاء كائن Sortable جديد مع تعطيل الحفظ التلقائي
         categoriesSortable = new Sortable(categoriesList, {
             animation: 150,
             handle: '.drag-handle',
+            // إزالة الخاصية onEnd التي كانت تحفظ تلقائياً
+            // سيتم الحفظ فقط عند الضغط على زر حفظ ترتيب الفئات
         });
     }
 
@@ -4282,12 +4281,14 @@ function loadCategories() {
     });
 }
 
+// دالة جديدة لحفظ ترتيب الفئات
 async function saveCategoriesOrder() {
     if (!checkPermission('categories', 'edit')) {
         alert('ليس لديك صلاحية لتعديل الفئات');
         return;
     }
     
+    // الحصول على الترتيب الجديد من DOM
     const categoriesList = document.getElementById('categoriesList');
     const categoryItems = categoriesList.querySelectorAll('.category-item');
     const newOrder = [];
@@ -4300,8 +4301,10 @@ async function saveCategoriesOrder() {
         }
     });
     
+    // تحديث مصفوفة الفئات بالترتيب الجديد
     categoriesWithImages = newOrder;
     
+    // حفظ في قاعدة البيانات
     await saveCategoriesToFirestore();
     
     alert('تم حفظ ترتيب الفئات بنجاح!');
@@ -4754,6 +4757,7 @@ function loadOrders(searchTerm = '', page = 1) {
             const orderId = parseInt(this.getAttribute('data-id'));
             const select = document.querySelector(`.order-status-select[data-id="${orderId}"]`);
             const newStatus = select.value;
+            // استخدام withLoading لمنع الضغط المتكرر
             withLoading(this, () => updateOrderStatus(orderId, newStatus));
         });
     });
@@ -4823,7 +4827,7 @@ async function deleteOrder(orderId) {
     }
 }
 
-// ============ وظائف إدارة السلايدر (معدلة للهيكل الجديد) ============
+// ============ وظائف إدارة السلايدر ============
 async function loadSliderImages() {
     const sliderImagesList = document.getElementById('sliderImagesList');
     if (!sliderImagesList) return;
@@ -4835,23 +4839,15 @@ async function loadSliderImages() {
         return;
     }
 
-    const sortedImages = [...sliderImages].sort((a, b) => (a.order || 0) - (b.order || 0));
-
-    sortedImages.forEach((imageObj, index) => {
-        const imageUrl = imageObj.url || imageObj;
-        const isVisible = imageObj.visible !== false;
-        
+    sliderImages.forEach((url, index) => {
         const imageItem = document.createElement('div');
         imageItem.className = 'slider-image-item';
         
         imageItem.innerHTML = `
-            <div class="slider-image-preview" style="background-image: url('${imageUrl}')"></div>
+            <div class="slider-image-preview" style="background-image: url('${url}')"></div>
             <div class="slider-image-url">صورة السلايدر ${index + 1}</div>
             <div class="slider-image-actions">
-                <button class="toggle-visibility-btn ${!isVisible ? 'hidden' : ''}" data-id="${imageObj.id || ''}">
-                    <i class="fas ${isVisible ? 'fa-eye' : 'fa-eye-slash'}"></i>
-                </button>
-                ${checkPermission('slider', 'delete') ? `<button class="action-btn delete-btn" data-id="${imageObj.id || ''}">حذف</button>` : ''}
+                ${checkPermission('slider', 'delete') ? `<button class="action-btn delete-btn" data-index="${index}">حذف</button>` : ''}
             </div>
         `;
         sliderImagesList.appendChild(imageItem);
@@ -4859,15 +4855,8 @@ async function loadSliderImages() {
 
     document.querySelectorAll('#sliderImagesList .delete-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
-            const imageId = this.getAttribute('data-id');
-            await deleteSliderImage(imageId);
-        });
-    });
-
-    document.querySelectorAll('#sliderImagesList .toggle-visibility-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const imageId = this.getAttribute('data-id');
-            await toggleSliderImageVisibility(imageId);
+            const index = parseInt(this.getAttribute('data-index'));
+            await deleteSliderImage(index);
         });
     });
 }
@@ -4889,16 +4878,8 @@ async function addSliderImage() {
         const base64Image = await fileToBase64(imageFile);
         const compressedImage = await compressImage(base64Image);
         
-        const newImageObject = {
-            id: Date.now().toString(),
-            url: compressedImage,
-            visible: true,
-            order: sliderImages.length
-        };
-        
-        const exists = sliderImages.some(imgObj => imgObj.url === compressedImage);
-        if (!exists) {
-            sliderImages.unshift(newImageObject);
+        if (!sliderImages.includes(compressedImage)) {
+            sliderImages.unshift(compressedImage);
             await saveSliderToFirestore();
             loadSliderImages();
             const sliderForm = document.getElementById('sliderForm');
@@ -4910,41 +4891,21 @@ async function addSliderImage() {
             alert('هذه الصورة موجودة بالفعل.');
         }
     } catch (error) {
-        console.error("Error adding slider image:", error);
         alert('حدث خطأ في تحميل الصورة');
     }
 }
 
-async function deleteSliderImage(imageId) {
+async function deleteSliderImage(index) {
     if (!checkPermission('slider', 'delete')) {
         alert('ليس لديك صلاحية لحذف صور السلايدر');
         return;
     }
     
-    if (!imageId) {
-        alert('معرف الصورة غير صالح.');
-        return;
-    }
-
     if (confirm('هل أنت متأكد من حذف هذه الصورة من السلايدر؟')) {
-        sliderImages = sliderImages.filter(imgObj => imgObj.id !== imageId);
+        sliderImages.splice(index, 1);
         await saveSliderToFirestore();
         loadSliderImages();
         alert('تم حذف الصورة بنجاح!');
-    }
-}
-
-async function toggleSliderImageVisibility(imageId) {
-    if (!checkPermission('slider', 'edit')) {
-        alert('ليس لديك صلاحية لتعديل السلايدر');
-        return;
-    }
-
-    const imageIndex = sliderImages.findIndex(img => img.id === imageId);
-    if (imageIndex !== -1) {
-        sliderImages[imageIndex].visible = !sliderImages[imageIndex].visible;
-        await saveSliderToFirestore();
-        loadSliderImages();
     }
 }
 
@@ -4960,44 +4921,6 @@ function updateOrdersBadge() {
             badge.style.display = 'none';
         }
     }
-}
-
-function updateCustomerProducts() {
-    const visibleProducts = products.filter(p => {
-        const category = categoriesWithImages.find(c => c.name === p.category);
-        return category ? category.visible : false;
-    });
-    
-    const customerProducts = visibleProducts.map(p => ({
-        id: p.id,
-        name: p.name,
-        price: p.sellPrice,
-        image: p.images && p.images[0] ? p.images[0] : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMEYwRjAiLz4KPHBhdGggZD0iTTEwMCAxMDBMMjAwIDEwMEwyMDAgMjAwTDEwMCAyMDBMMTAwIDEwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTEyNSAxMjVMMTc1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTE3NSAxMjVMMTI1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+',
-        category: p.category,
-        generalDescription: p.generalDescription,
-        specs: p.specs,
-        timer: p.timer,
-        discount: p.discount,
-        quantity: p.quantity !== undefined ? p.quantity : 10,
-        createdAt: p.createdAt || new Date().getTime()
-    }));
-    localStorage.setItem('products', JSON.stringify(customerProducts));
-}
-
-function updateCustomerCategories() {
-    const visibleCategories = categoriesWithImages.filter(c => c.visible);
-    const customerCategories = visibleCategories.map(c => c.name);
-    localStorage.setItem('categories', JSON.stringify(["الكل", ...customerCategories]));
-    localStorage.setItem('categoriesWithImages', JSON.stringify(categoriesWithImages));
-}
-
-function updateCustomerSlider() {
-    const visibleSliderImages = sliderImages
-        .filter(imgObj => imgObj.visible !== false)
-        .sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map(imgObj => imgObj.url);
-        
-    localStorage.setItem('customerSliderImages', JSON.stringify(visibleSliderImages));
 }
 
 function setupPagination(items, containerId, paginationId, currentPage, itemsPerPage, renderFunction) {
@@ -5132,6 +5055,39 @@ function setupNavigation() {
             }
         });
     });
+}
+
+function updateCustomerProducts() {
+    const visibleProducts = products.filter(p => {
+        const category = categoriesWithImages.find(c => c.name === p.category);
+        return category ? category.visible : false;
+    });
+    
+    const customerProducts = visibleProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.sellPrice,
+        image: p.images && p.images[0] ? p.images[0] : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMEYwRjAiLz4KPHBhdGggZD0iTTEwMCAxMDBMMjAwIDEwMEwyMDAgMjAwTDEwMCAyMDBMMTAwIDEwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTEyNSAxMjVMMTc1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTE3NSAxMjVMMTI1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+',
+        category: p.category,
+        generalDescription: p.generalDescription,
+        specs: p.specs,
+        timer: p.timer,
+        discount: p.discount,
+        quantity: p.quantity !== undefined ? p.quantity : 10,
+        createdAt: p.createdAt || new Date().getTime()
+    }));
+    localStorage.setItem('products', JSON.stringify(customerProducts));
+}
+
+function updateCustomerCategories() {
+    const visibleCategories = categoriesWithImages.filter(c => c.visible);
+    const customerCategories = visibleCategories.map(c => c.name);
+    localStorage.setItem('categories', JSON.stringify(["الكل", ...customerCategories]));
+    localStorage.setItem('categoriesWithImages', JSON.stringify(categoriesWithImages));
+}
+
+function updateCustomerSlider() {
+    localStorage.setItem('customerSliderImages', JSON.stringify(sliderImages));
 }
 
 // ============ وظائف معالجة الصور ============
@@ -5747,10 +5703,13 @@ function setupModalListeners() {
         });
     }
     
+    // تطبيق وظيفة السحب والإفلات عند تحميل الصفحة
     setupDragAndDrop();
 }
+    
 </script>
 
 </body>
 </html>
+
 
