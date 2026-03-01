@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
-        /* جميع الأنماط السابقة كما هي */
+        /* جميع الأنماط السابقة كما هي، لم يتم تغيير أي شيء */
 :root {
     --primary-color: #0074D9;
     --secondary-color: #2C3E50;
@@ -172,6 +172,7 @@ header {
     transform: scale(0.98);
 }
 
+/* تعديل شبكة المنتجات لتصبح عمودية مثل الفئات */
 .products-grid {
     display: flex;
     flex-direction: column;
@@ -179,6 +180,7 @@ header {
     width: 100%;
 }
 
+/* بطاقة المنتج بتصميم أفقي مثل الفئات */
 .product-card {
     background-color: white;
     border-radius: var(--border-radius);
@@ -201,6 +203,7 @@ header {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
+/* حاوية تفاصيل المنتج */
 .product-details {
     display: flex;
     align-items: center;
@@ -208,6 +211,7 @@ header {
     flex: 1;
 }
 
+/* صورة المنتج المصغرة */
 .product-image-thumb {
     width: 50px;
     height: 50px;
@@ -219,6 +223,7 @@ header {
     flex-shrink: 0;
 }
 
+/* معلومات المنتج */
 .product-info {
     display: flex;
     flex-direction: column;
@@ -245,6 +250,7 @@ header {
     gap: 4px;
 }
 
+/* عرض الكمية */
 .quantity-display {
     display: inline-block;
     padding: 2px 8px;
@@ -268,12 +274,14 @@ header {
     color: white;
 }
 
+/* المواصفات الإضافية */
 .product-specs {
     font-size: 12px;
     color: #777;
     margin-top: 2px;
 }
 
+/* أزرار التحكم */
 .product-actions {
     display: flex;
     gap: 10px;
@@ -304,6 +312,7 @@ header {
     color: white;
 }
 
+/* باقي الأنماط السابقة لم تتغير */
 .form-container {
     background-color: white;
     padding: 20px;
@@ -1084,7 +1093,7 @@ header {
     display: none !important;
 }
 
-/* أنماط الحسابات */
+/* ============ الأنماط الجديدة لإدارة الحسابات ============ */
 .accounts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -1207,6 +1216,7 @@ header {
     gap: 5px;
 }
 
+/* صفحة طلبات المستخدم */
 .user-orders-page {
     display: none;
 }
@@ -1269,7 +1279,7 @@ header {
     margin-top: 5px;
 }
 
-/* أنماط ترقيم الصفحات */
+/* ============ أنماط ترقيم الصفحات ============ */
 .pagination {
     display: flex;
     justify-content: center;
@@ -1336,7 +1346,7 @@ header {
     background-color: #f8f9fa;
 }
 
-/* نوافذ منبثقة إضافية */
+/* ============ نوافذ منبثقة إضافية ============ */
 #editAccountModal .form-group input[readonly] {
     background-color: #f8f9fa;
     cursor: not-allowed;
@@ -1445,6 +1455,7 @@ header {
     animation: spin 0.6s linear infinite;
 }
 
+/* أنماط معاينة الصور */
 .image-preview-container {
     display: flex;
     flex-wrap: wrap;
@@ -1476,6 +1487,7 @@ header {
     margin-top: 5px;
 }
 
+/* ============ الأنماط الجديدة لزر رفع الصور ونظام الصور المتعددة ============ */
 .custom-file-upload {
     border: 2px dashed #0074D9;
     border-radius: var(--border-radius);
@@ -1653,7 +1665,7 @@ header {
     transform: scale(1.01);
 }
 
-/* أنماط تسجيل الدخول */
+/* ============ أنماط تسجيل الدخول وإدارة حسابات المنظومة ============ */
 .login-overlay {
     position: fixed;
     top: 0;
@@ -1765,7 +1777,7 @@ header {
     display: none;
 }
 
-/* أنماط حسابات المنظومة */
+/* أنماط إدارة حسابات المنظومة */
 .system-account-card {
     background-color: white;
     border-radius: var(--border-radius);
@@ -1910,6 +1922,7 @@ header {
     margin-left: auto;
 }
 
+/* أنماط الصلاحيات في النافذة المنبثقة */
 .permissions-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -1954,6 +1967,7 @@ header {
     cursor: pointer;
 }
 
+/* رسالة التحذير عند عدم وجود صلاحيات */
 .no-permission-message {
     text-align: center;
     padding: 50px 20px;
@@ -1971,10 +1985,12 @@ header {
     margin-bottom: 10px;
 }
 
+/* أنماط لإخفاء العناصر بناءً على الصلاحيات */
 .hidden-by-permission {
     display: none !important;
 }
 
+/* تحسين عرض الصلاحيات في البطاقة */
 .permission-summary {
     font-size: 12px;
     color: #666;
@@ -1982,6 +1998,7 @@ header {
     line-height: 1.4;
 }
 
+/* تحسين عرض القائمة المنسدلة في تسجيل الدخول */
 .login-form select option {
     padding: 10px;
     direction: ltr;
@@ -2091,7 +2108,7 @@ header {
                 <div class="page" id="categoriesPage">
                     <h2 class="section-title">إدارة الفئات</h2>
                     
-                    <!-- زر حفظ ترتيب الفئات -->
+                    <!-- زر حفظ ترتيب الفئات الجديد -->
                     <button class="add-product-btn" id="saveCategoriesOrderBtn" style="background-color: var(--primary-color); margin-bottom: 15px;">
                         <i class="fas fa-save"></i> حفظ ترتيب الفئات
                     </button>
@@ -2596,15 +2613,13 @@ header {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 <script>
 // ============ Firebase Configuration and Initialization ============
-// استخدام قاعدة البيانات الأصلية
 const firebaseConfig = {
-    apiKey: "AIzaSyBTfiSaiISbKGy2vMpZe-TMQAg_sEiSLWE",
-    authDomain: "info-center-e5adb.firebaseapp.com",
-    projectId: "info-center-e5adb",
-    storageBucket: "info-center-e5adb.firebasestorage.app",
-    messagingSenderId: "445052804703",
-    appId: "1:445052804703:web:e1da4b68f2158cbfa0c5ea",
-    measurementId: "G-PRZLVPY524"
+    apiKey: "AIzaSyAgATHwaRSRRBjx6_okTzlR07B5pNw-7V4",
+    authDomain: "live-9b23f.firebaseapp.com",
+    projectId: "live-9b23f",
+    storageBucket: "live-9b23f.firebasestorage.app",
+    messagingSenderId: "172654125920",
+    appId: "1:172654125920:web:b66ade11b2515a28a2f405"
 };
 
 // Initialize Firebase
@@ -2626,31 +2641,16 @@ async function getFirestoreData(collectionName, defaultValue = []) {
 
 async function setFirestoreData(collectionName, data) {
     try {
-        // حذف جميع المستندات القديمة
-        const snapshot = await db.collection(collectionName).get();
         const batch = db.batch();
-        
-        snapshot.forEach(doc => {
-            batch.delete(doc.ref);
+        const snapshot = await db.collection(collectionName).get();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        data.forEach(item => {
+            const docRef = db.collection(collectionName).doc();
+            batch.set(docRef, item);
         });
-        
         await batch.commit();
-        
-        // إضافة البيانات الجديدة
-        if (data && data.length > 0) {
-            const addBatch = db.batch();
-            data.forEach(item => {
-                const docRef = db.collection(collectionName).doc();
-                addBatch.set(docRef, item);
-            });
-            await addBatch.commit();
-        }
-        
-        console.log(`تم حفظ ${data.length} عنصر في ${collectionName}`);
-        return true;
     } catch (error) {
         console.error(`Error setting ${collectionName}:`, error);
-        throw error;
     }
 }
 
@@ -2674,20 +2674,16 @@ function listenToOrders() {
 }
 
 async function loadOrdersFromSnapshot() {
-    try {
-        const snapshot = await db.collection("orders").get();
-        orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        localStorage.setItem('adminOrders', JSON.stringify(orders));
-        
-        if (document.getElementById('ordersPage').classList.contains('active')) {
-            loadOrders();
-        }
-        
-        updateOrdersBadge();
-    } catch (error) {
-        console.error("Error loading orders from snapshot:", error);
+    const snapshot = await db.collection("orders").get();
+    orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    localStorage.setItem('adminOrders', JSON.stringify(orders));
+    
+    if (document.getElementById('ordersPage').classList.contains('active')) {
+        loadOrders();
     }
+    
+    updateOrdersBadge();
 }
 
 // ============ Global variables ============
@@ -2726,10 +2722,12 @@ let categoriesSortable = null;
 async function withLoading(button, asyncCallback) {
     if (!button) return;
     
+    // منع الضغط المتكرر
     if (button.classList.contains('loading')) {
         return;
     }
     
+    // إضافة كلاس التحميل
     button.classList.add('loading');
     const originalText = button.innerHTML;
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
@@ -2737,6 +2735,7 @@ async function withLoading(button, asyncCallback) {
     try {
         await asyncCallback();
     } finally {
+        // إزالة كلاس التحميل بعد الانتهاء
         button.classList.remove('loading');
         button.innerHTML = originalText;
     }
@@ -2744,166 +2743,62 @@ async function withLoading(button, asyncCallback) {
 
 // ============ Initialize System: load data from Firestore ============
 document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        await initializeSystem();
-        setupEventListeners();
-        setupModalListeners();
-        checkLoginStatus();
-    } catch (error) {
-        console.error("Error during initialization:", error);
-        alert("حدث خطأ في تحميل النظام. يرجى تحديث الصفحة والمحاولة مرة أخرى.");
-    }
+    await initializeSystem();
+    setupEventListeners();
+    setupModalListeners();
+    
+    checkLoginStatus();
 });
 
 async function initializeSystem() {
-    try {
-        products = await getFirestoreData('products');
-        categoriesWithImages = await getFirestoreData('categories');
-        coupons = await getFirestoreData('coupons');
-        orders = await getFirestoreData('orders');
-        sliderImages = await getFirestoreData('sliderImages');
-        users = await getFirestoreData('users');
-        systemAccounts = await getFirestoreData('systemAccounts');
+    products = await getFirestoreData('products');
+    categoriesWithImages = await getFirestoreData('categories');
+    coupons = await getFirestoreData('coupons');
+    orders = await getFirestoreData('orders');
+    sliderImages = await getFirestoreData('sliderImages');
+    users = await getFirestoreData('users');
+    systemAccounts = await getFirestoreData('systemAccounts');
 
-        console.log("تم تحميل البيانات:", {
-            products: products.length,
-            categories: categoriesWithImages.length,
-            coupons: coupons.length,
-            orders: orders.length,
-            slider: sliderImages.length,
-            users: users.length,
-            systemAccounts: systemAccounts.length
-        });
+    listenToOrders();
 
-        // ============ إضافة حساب افتراضي إذا لم يكن موجوداً ============
-        const defaultAdminEmail = "admin@atlas.ly";
-        const defaultAdminPassword = "admin123456";
-        
-        const defaultAccountExists = systemAccounts.some(acc => acc.email === defaultAdminEmail);
-        
-        if (!defaultAccountExists) {
-            console.log("جاري إنشاء حساب المدير الافتراضي...");
-            
-            const fullPermissions = {
-                products: { view: true, edit: true, delete: true },
-                categories: { view: true, edit: true, delete: true },
-                coupons: { view: true, edit: true, delete: true },
-                orders: { view: true, edit: true, delete: true },
-                slider: { view: true, edit: true, delete: true },
-                accounts: { view: true, edit: true, delete: true },
-                systemAccounts: { view: true, edit: true, delete: true }
-            };
-            
-            const defaultAccount = {
-                email: defaultAdminEmail,
-                password: defaultAdminPassword,
-                permissions: fullPermissions,
-                createdAt: new Date().toISOString()
-            };
-            
-            systemAccounts.push(defaultAccount);
-            
-            try {
-                // محاولة إنشاء المستخدم في Firebase Authentication
-                await auth.createUserWithEmailAndPassword(defaultAdminEmail, defaultAdminPassword);
-                console.log("تم إنشاء حساب المدير في Firebase Authentication بنجاح");
-            } catch (error) {
-                if (error.code === 'auth/email-already-in-use') {
-                    console.log("حساب المدير موجود بالفعل في Firebase Authentication");
-                } else {
-                    console.error("خطأ في إنشاء حساب المدير:", error);
-                }
-            }
-            
-            // حفظ في Firestore
-            await saveSystemAccountsToFirestore();
-            console.log("تم إضافة حساب المدير الافتراضي إلى قاعدة البيانات");
-        }
+    // لم نعد نضيف حساب افتراضي
+    // سيتم إنشاء أول حساب يدوياً عبر واجهة إدارة حسابات المنظومة
 
-        listenToOrders();
-
-        updateCustomerProducts();
-        updateCustomerCategories();
-        updateCustomerSlider();
-        
-    } catch (error) {
-        console.error("Error in initializeSystem:", error);
-        throw error;
-    }
+    updateCustomerProducts();
+    updateCustomerCategories();
+    updateCustomerSlider();
 }
 
 async function saveProductsToFirestore() {
-    try {
-        await setFirestoreData('products', products);
-        updateCustomerProducts();
-        console.log("تم حفظ المنتجات بنجاح");
-    } catch (error) {
-        console.error("Error saving products:", error);
-        alert("حدث خطأ في حفظ المنتجات");
-    }
+    await setFirestoreData('products', products);
+    updateCustomerProducts();
 }
 
 async function saveCategoriesToFirestore() {
-    try {
-        await setFirestoreData('categories', categoriesWithImages);
-        updateCustomerCategories();
-        updateCustomerProducts();
-        console.log("تم حفظ الفئات بنجاح");
-    } catch (error) {
-        console.error("Error saving categories:", error);
-        alert("حدث خطأ في حفظ الفئات");
-    }
+    await setFirestoreData('categories', categoriesWithImages);
+    updateCustomerCategories();
+    updateCustomerProducts();
 }
 
 async function saveCouponsToFirestore() {
-    try {
-        await setFirestoreData('coupons', coupons);
-        console.log("تم حفظ الكوبونات بنجاح");
-    } catch (error) {
-        console.error("Error saving coupons:", error);
-        alert("حدث خطأ في حفظ الكوبونات");
-    }
+    await setFirestoreData('coupons', coupons);
 }
 
 async function saveOrdersToFirestore() {
-    try {
-        await setFirestoreData('orders', orders);
-        console.log("تم حفظ الطلبات بنجاح");
-    } catch (error) {
-        console.error("Error saving orders:", error);
-        alert("حدث خطأ في حفظ الطلبات");
-    }
+    await setFirestoreData('orders', orders);
 }
 
 async function saveSliderToFirestore() {
-    try {
-        await setFirestoreData('sliderImages', sliderImages);
-        updateCustomerSlider();
-        console.log("تم حفظ السلايدر بنجاح");
-    } catch (error) {
-        console.error("Error saving slider:", error);
-        alert("حدث خطأ في حفظ السلايدر");
-    }
+    await setFirestoreData('sliderImages', sliderImages);
+    updateCustomerSlider();
 }
 
 async function saveUsersToFirestore() {
-    try {
-        await setFirestoreData('users', users);
-        console.log("تم حفظ المستخدمين بنجاح");
-    } catch (error) {
-        console.error("Error saving users:", error);
-        alert("حدث خطأ في حفظ المستخدمين");
-    }
+    await setFirestoreData('users', users);
 }
 
 async function saveSystemAccountsToFirestore() {
-    try {
-        await setFirestoreData('systemAccounts', systemAccounts);
-        console.log("تم حفظ حسابات النظام بنجاح");
-    } catch (error) {
-        console.error("Error saving system accounts:", error);
-        alert("حدث خطأ في حفظ حسابات النظام");
-    }
+    await setFirestoreData('systemAccounts', systemAccounts);
 }
 
 // ============ Check login status ============
@@ -2951,16 +2846,9 @@ async function login() {
     const password = document.getElementById('loginPassword').value;
     const loginError = document.getElementById('loginError');
     
-    if (!email || !password) {
-        loginError.style.display = 'block';
-        loginError.textContent = 'الرجاء اختيار الحساب وإدخال كلمة المرور';
-        return;
-    }
-    
     try {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const account = systemAccounts.find(acc => acc.email === email);
-        
         if (account) {
             loggedInAccount = {
                 email: account.email,
@@ -2982,25 +2870,19 @@ async function login() {
             applyPermissions();
         } else {
             loginError.style.display = 'block';
-            loginError.textContent = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
         }
     } catch (error) {
         console.error("Login error:", error);
         loginError.style.display = 'block';
-        loginError.textContent = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
     }
 }
 
 async function logout() {
     if (confirm('هل تريد تسجيل الخروج من النظام؟')) {
-        try {
-            await auth.signOut();
-            localStorage.removeItem('loggedInAccount');
-            loggedInAccount = null;
-            showLoginScreen();
-        } catch (error) {
-            console.error("Logout error:", error);
-        }
+        await auth.signOut();
+        localStorage.removeItem('loggedInAccount');
+        loggedInAccount = null;
+        showLoginScreen();
     }
 }
 
@@ -3194,6 +3076,7 @@ function openEditSystemAccountModal(email) {
     const emailHidden = document.getElementById('systemAccountEmailModal');
     const passwordInput = document.getElementById('systemAccountPasswordModal');
     const deleteBtn = document.getElementById('deleteSystemAccountModal');
+    const form = document.getElementById('systemAccountFormModal');
     
     modalTitle.textContent = `تعديل حساب ${email}`;
     emailHidden.value = email;
@@ -3299,14 +3182,12 @@ async function saveSystemAccount() {
                         await user.updatePassword(password);
                     }
                 }
-                systemAccounts[index].updatedAt = new Date().toISOString();
             }
         } else {
             const newAccount = {
                 email: email,
                 password: password,
-                permissions: permissions,
-                createdAt: new Date().toISOString()
+                permissions: permissions
             };
             systemAccounts.push(newAccount);
             await auth.createUserWithEmailAndPassword(email, password);
@@ -3652,7 +3533,6 @@ async function saveAccountChanges() {
         }
         
         users[userIndex].addresses = currentUserView.addresses || [];
-        users[userIndex].updatedAt = new Date().toISOString();
         
         await saveUsersToFirestore();
         
@@ -3861,6 +3741,7 @@ function loadUserOrders(searchTerm = '', page = 1) {
             const orderId = parseInt(this.getAttribute('data-id'));
             const select = document.querySelector(`.order-status-select[data-id="${orderId}"]`);
             const newStatus = select.value;
+            // استخدام withLoading لمنع الضغط المتكرر
             withLoading(this, () => updateOrderStatus(orderId, newStatus));
         });
     });
@@ -3929,7 +3810,6 @@ async function saveAddress() {
                 users[userIndex].addresses = [];
             }
             users[userIndex].addresses.push(newAddress);
-            users[userIndex].updatedAt = new Date().toISOString();
             await saveUsersToFirestore();
         }
         
@@ -3940,7 +3820,7 @@ async function saveAddress() {
     }
 }
 
-// ============ وظائف إدارة المنتجات ============
+// ============ وظائف إدارة المنتجات (معدلة لبطاقة عرضية مثل الفئات) ============
 function loadProducts(searchTerm = '', page = 1) {
     const productsGrid = document.getElementById('productsGrid');
     const noProductsMessage = document.getElementById('noProductsMessage');
@@ -3949,6 +3829,7 @@ function loadProducts(searchTerm = '', page = 1) {
     productsGrid.innerHTML = '';
     currentProductsPage = page;
 
+    // فلترة المنتجات بناءً على البحث
     let filteredProducts = products.filter(product => 
         product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -3978,6 +3859,7 @@ function loadProducts(searchTerm = '', page = 1) {
         });
     }
 
+    // إعادة ربط الأزرار
     document.querySelectorAll('#productsPage .edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const productId = parseInt(this.getAttribute('data-id'));
@@ -3997,11 +3879,13 @@ function loadProducts(searchTerm = '', page = 1) {
     });
 }
 
+// دالة إنشاء بطاقة المنتج (موحدة لجميع الصفحات) - تم إزالة أيقونة السحب
 function createProductCard(product) {
     const card = document.createElement('div');
     card.className = 'product-card';
     card.dataset.id = product.id;
 
+    // تحديد حالة الكمية
     let quantityClass = 'quantity-ok';
     let quantityStatus = `${product.quantity || 0} قطعة`;
     if (product.quantity <= 0) {
@@ -4011,8 +3895,10 @@ function createProductCard(product) {
         quantityClass = 'quantity-low';
     }
 
+    // صورة افتراضية إذا لم توجد صور
     const imageUrl = product.images && product.images[0] ? product.images[0] : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNGMEYwRjAiLz48cGF0aCBkPSJNMjAgMjBMNDAgMjBMNDAgNDBMMjAgNDBMMjAgMjBaIiBmaWxsPSIjQ0NDQ0NDIi8+PHBhdGggZD0iTTI1IDI1TDM1IDM1IiBzdHJva2U9IiM5OTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTM1IDI1TDI1IDM1IiBzdHJva2U9IiM5OTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+PC9zdmc+';
 
+    // بناء HTML البطاقة بشكل أفقي (تم إزالة <i class="fas fa-ellipsis-v drag-handle"></i>)
     card.innerHTML = `
         <div class="category-details">
             <div class="category-image-thumb" style="background-image: url('${imageUrl}');"></div>
@@ -4316,7 +4202,7 @@ async function deleteProduct(productId) {
     }
 }
 
-// ============ وظائف إدارة الفئات ============
+// ============ وظائف إدارة الفئات مع حفظ الترتيب يدوياً ============
 function loadCategories() {
     const categoriesList = document.getElementById('categoriesList');
     if (!categoriesList) return;
@@ -4335,7 +4221,7 @@ function loadCategories() {
         categoryItem.innerHTML = `
             <div class="category-details">
                 <i class="fas fa-ellipsis-v drag-handle"></i>
-                <div class="category-image-thumb" style="background-image: url('${cat.imageURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMEYwRjAiLz4KPHBhdGggZD0iTTEwMCAxMDBMMjAwIDEwMEwyMDAgMjAwTDEwMCAyMDBMMTAwIDEwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTEyNSAxMjVMMTc1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTE3NSAxMjVMMTI1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+'})"></div>
+                <div class="category-image-thumb" style="background-image: url('${cat.imageURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMEYwRjAiLz4KPHBhdGggZD0iTTEwMCAxMDBMMjAwIDEwMEwyMDAgMjAwTDEwMCAyMDBMMTAwIDEwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTEyNSAxMjVMMTc1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTE3NSAxMjVMMTI1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+'}')"></div>
                 <span class="category-name-display">${cat.name}</span>
             </div>
             <div class="category-actions">
@@ -4350,14 +4236,19 @@ function loadCategories() {
         categoriesList.appendChild(categoryItem);
     });
     
+    // إنشاء كائن Sortable جديد إذا كان موجوداً
     if (typeof Sortable !== 'undefined') {
+        // إذا كان هناك كائن سابق، قم بتدميره
         if (categoriesSortable) {
             categoriesSortable.destroy();
         }
         
+        // إنشاء كائن Sortable جديد مع تعطيل الحفظ التلقائي
         categoriesSortable = new Sortable(categoriesList, {
             animation: 150,
             handle: '.drag-handle',
+            // إزالة الخاصية onEnd التي كانت تحفظ تلقائياً
+            // سيتم الحفظ فقط عند الضغط على زر حفظ ترتيب الفئات
         });
     }
 
@@ -4390,13 +4281,14 @@ function loadCategories() {
     });
 }
 
-// دالة حفظ ترتيب الفئات
+// دالة جديدة لحفظ ترتيب الفئات
 async function saveCategoriesOrder() {
     if (!checkPermission('categories', 'edit')) {
         alert('ليس لديك صلاحية لتعديل الفئات');
         return;
     }
     
+    // الحصول على الترتيب الجديد من DOM
     const categoriesList = document.getElementById('categoriesList');
     const categoryItems = categoriesList.querySelectorAll('.category-item');
     const newOrder = [];
@@ -4409,12 +4301,10 @@ async function saveCategoriesOrder() {
         }
     });
     
-    if (newOrder.length !== categoriesWithImages.length) {
-        console.warn('عدد الفئات في الترتيب الجديد لا يساوي العدد الأصلي');
-    }
-    
+    // تحديث مصفوفة الفئات بالترتيب الجديد
     categoriesWithImages = newOrder;
     
+    // حفظ في قاعدة البيانات
     await saveCategoriesToFirestore();
     
     alert('تم حفظ ترتيب الفئات بنجاح!');
@@ -4735,13 +4625,7 @@ async function saveCoupon() {
         return;
     }
     
-    coupons.push({ 
-        code, 
-        value, 
-        maxUsage, 
-        used: 0,
-        createdAt: new Date().toISOString()
-    });
+    coupons.push({ code, value, maxUsage, used: 0 });
     await saveCouponsToFirestore();
     loadCoupons();
     const couponForm = document.getElementById('couponForm');
@@ -4873,6 +4757,7 @@ function loadOrders(searchTerm = '', page = 1) {
             const orderId = parseInt(this.getAttribute('data-id'));
             const select = document.querySelector(`.order-status-select[data-id="${orderId}"]`);
             const newStatus = select.value;
+            // استخدام withLoading لمنع الضغط المتكرر
             withLoading(this, () => updateOrderStatus(orderId, newStatus));
         });
     });
@@ -5818,11 +5703,11 @@ function setupModalListeners() {
         });
     }
     
+    // تطبيق وظيفة السحب والإفلات عند تحميل الصفحة
     setupDragAndDrop();
 }
     
 </script>
 
 </body>
-</html>
-
+    </html>
