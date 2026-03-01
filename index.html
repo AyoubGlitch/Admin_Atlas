@@ -2722,10 +2722,12 @@ let categoriesSortable = null;
 async function withLoading(button, asyncCallback) {
     if (!button) return;
     
+    // منع الضغط المتكرر
     if (button.classList.contains('loading')) {
         return;
     }
     
+    // إضافة كلاس التحميل
     button.classList.add('loading');
     const originalText = button.innerHTML;
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
@@ -2733,6 +2735,7 @@ async function withLoading(button, asyncCallback) {
     try {
         await asyncCallback();
     } finally {
+        // إزالة كلاس التحميل بعد الانتهاء
         button.classList.remove('loading');
         button.innerHTML = originalText;
     }
@@ -2756,55 +2759,10 @@ async function initializeSystem() {
     users = await getFirestoreData('users');
     systemAccounts = await getFirestoreData('systemAccounts');
 
-    // ============ إضافة حساب افتراضي إذا لم يكن موجوداً ============
-    const defaultAdminEmail = "admin@atlas.ly";
-    const defaultAdminPassword = "admin123456";
-    
-    // التحقق من وجود حساب افتراضي
-    const defaultAccountExists = systemAccounts.some(acc => acc.email === defaultAdminEmail);
-    
-    if (!defaultAccountExists) {
-        console.log("جاري إنشاء حساب المدير الافتراضي...");
-        
-        // إنشاء الصلاحيات الكاملة
-        const fullPermissions = {
-            products: { view: true, edit: true, delete: true },
-            categories: { view: true, edit: true, delete: true },
-            coupons: { view: true, edit: true, delete: true },
-            orders: { view: true, edit: true, delete: true },
-            slider: { view: true, edit: true, delete: true },
-            accounts: { view: true, edit: true, delete: true },
-            systemAccounts: { view: true, edit: true, delete: true }
-        };
-        
-        // إنشاء كائن الحساب الافتراضي
-        const defaultAccount = {
-            email: defaultAdminEmail,
-            password: defaultAdminPassword,
-            permissions: fullPermissions
-        };
-        
-        // إضافة الحساب إلى مصفوفة systemAccounts
-        systemAccounts.push(defaultAccount);
-        
-        try {
-            // محاولة إنشاء المستخدم في Firebase Authentication
-            await auth.createUserWithEmailAndPassword(defaultAdminEmail, defaultAdminPassword);
-            console.log("تم إنشاء حساب المدير في Firebase Authentication بنجاح");
-        } catch (error) {
-            if (error.code === 'auth/email-already-in-use') {
-                console.log("حساب المدير موجود بالفعل في Firebase Authentication");
-            } else {
-                console.error("خطأ في إنشاء حساب المدير:", error);
-            }
-        }
-        
-        // حفظ في Firestore
-        await saveSystemAccountsToFirestore();
-        console.log("تم إضافة حساب المدير الافتراضي إلى قاعدة البيانات");
-    }
-
     listenToOrders();
+
+    // لم نعد نضيف حساب افتراضي
+    // سيتم إنشاء أول حساب يدوياً عبر واجهة إدارة حسابات المنظومة
 
     updateCustomerProducts();
     updateCustomerCategories();
@@ -3250,6 +3208,29 @@ async function saveSystemAccount() {
     } catch (error) {
         console.error("Error saving system account:", error);
         alert("حدث خطأ أثناء حفظ الحساب: " + error.message);
+    }
+}
+
+async function deleteSystemAccount() {
+    const email = document.getElementById('systemAccountEmailModal').value;
+    
+    if (loggedInAccount && loggedInAccount.email === email) {
+        alert('لا يمكنك حذف الحساب المسجل دخول به حالياً');
+        return;
+    }
+    
+    if (confirm(`هل أنت متأكد من حذف حساب ${email}؟`)) {
+        try {
+            systemAccounts = systemAccounts.filter(acc => acc.email !== email);
+            await saveSystemAccountsToFirestore();
+            
+            closeSystemAccountModal();
+            loadSystemAccounts();
+            alert('تم حذف الحساب بنجاح');
+        } catch (error) {
+            console.error("Error deleting system account:", error);
+            alert("حدث خطأ أثناء حذف الحساب");
+        }
     }
 }
 
@@ -3760,6 +3741,7 @@ function loadUserOrders(searchTerm = '', page = 1) {
             const orderId = parseInt(this.getAttribute('data-id'));
             const select = document.querySelector(`.order-status-select[data-id="${orderId}"]`);
             const newStatus = select.value;
+            // استخدام withLoading لمنع الضغط المتكرر
             withLoading(this, () => updateOrderStatus(orderId, newStatus));
         });
     });
@@ -3838,7 +3820,7 @@ async function saveAddress() {
     }
 }
 
-// ============ وظائف إدارة المنتجات ============
+// ============ وظائف إدارة المنتجات (معدلة لبطاقة عرضية مثل الفئات) ============
 function loadProducts(searchTerm = '', page = 1) {
     const productsGrid = document.getElementById('productsGrid');
     const noProductsMessage = document.getElementById('noProductsMessage');
@@ -3847,6 +3829,7 @@ function loadProducts(searchTerm = '', page = 1) {
     productsGrid.innerHTML = '';
     currentProductsPage = page;
 
+    // فلترة المنتجات بناءً على البحث
     let filteredProducts = products.filter(product => 
         product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -3876,6 +3859,7 @@ function loadProducts(searchTerm = '', page = 1) {
         });
     }
 
+    // إعادة ربط الأزرار
     document.querySelectorAll('#productsPage .edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const productId = parseInt(this.getAttribute('data-id'));
@@ -3895,11 +3879,13 @@ function loadProducts(searchTerm = '', page = 1) {
     });
 }
 
+// دالة إنشاء بطاقة المنتج (موحدة لجميع الصفحات) - تم إزالة أيقونة السحب
 function createProductCard(product) {
     const card = document.createElement('div');
     card.className = 'product-card';
     card.dataset.id = product.id;
 
+    // تحديد حالة الكمية
     let quantityClass = 'quantity-ok';
     let quantityStatus = `${product.quantity || 0} قطعة`;
     if (product.quantity <= 0) {
@@ -3909,8 +3895,10 @@ function createProductCard(product) {
         quantityClass = 'quantity-low';
     }
 
+    // صورة افتراضية إذا لم توجد صور
     const imageUrl = product.images && product.images[0] ? product.images[0] : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNGMEYwRjAiLz48cGF0aCBkPSJNMjAgMjBMNDAgMjBMNDAgNDBMMjAgNDBMMjAgMjBaIiBmaWxsPSIjQ0NDQ0NDIi8+PHBhdGggZD0iTTI1IDI1TDM1IDM1IiBzdHJva2U9IiM5OTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTM1IDI1TDI1IDM1IiBzdHJva2U9IiM5OTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+PC9zdmc+';
 
+    // بناء HTML البطاقة بشكل أفقي (تم إزالة <i class="fas fa-ellipsis-v drag-handle"></i>)
     card.innerHTML = `
         <div class="category-details">
             <div class="category-image-thumb" style="background-image: url('${imageUrl}');"></div>
@@ -4214,7 +4202,7 @@ async function deleteProduct(productId) {
     }
 }
 
-// ============ وظائف إدارة الفئات ============
+// ============ وظائف إدارة الفئات مع حفظ الترتيب يدوياً ============
 function loadCategories() {
     const categoriesList = document.getElementById('categoriesList');
     if (!categoriesList) return;
@@ -4233,7 +4221,7 @@ function loadCategories() {
         categoryItem.innerHTML = `
             <div class="category-details">
                 <i class="fas fa-ellipsis-v drag-handle"></i>
-                <div class="category-image-thumb" style="background-image: url('${cat.imageURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMEYwRjAiLz4KPHBhdGggZD0iTTEwMCAxMDBMMjAwIDEwMEwyMDAgMjAwTDEwMCAyMDBMMTAwIDEwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTEyNSAxMjVMMTc1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTE3NSAxMjVMMTI1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+'})"></div>
+                <div class="category-image-thumb" style="background-image: url('${cat.imageURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMEYwRjAiLz4KPHBhdGggZD0iTTEwMCAxMDBMMjAwIDEwMEwyMDAgMjAwTDEwMCAyMDBMMTAwIDEwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTEyNSAxMjVMMTc1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTE3NSAxMjVMMTI1IDE3NSIgc3Ryb2tlPSIjOTY5Njk2IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+'}')"></div>
                 <span class="category-name-display">${cat.name}</span>
             </div>
             <div class="category-actions">
@@ -4248,14 +4236,19 @@ function loadCategories() {
         categoriesList.appendChild(categoryItem);
     });
     
+    // إنشاء كائن Sortable جديد إذا كان موجوداً
     if (typeof Sortable !== 'undefined') {
+        // إذا كان هناك كائن سابق، قم بتدميره
         if (categoriesSortable) {
             categoriesSortable.destroy();
         }
         
+        // إنشاء كائن Sortable جديد مع تعطيل الحفظ التلقائي
         categoriesSortable = new Sortable(categoriesList, {
             animation: 150,
             handle: '.drag-handle',
+            // إزالة الخاصية onEnd التي كانت تحفظ تلقائياً
+            // سيتم الحفظ فقط عند الضغط على زر حفظ ترتيب الفئات
         });
     }
 
@@ -4288,12 +4281,14 @@ function loadCategories() {
     });
 }
 
+// دالة جديدة لحفظ ترتيب الفئات
 async function saveCategoriesOrder() {
     if (!checkPermission('categories', 'edit')) {
         alert('ليس لديك صلاحية لتعديل الفئات');
         return;
     }
     
+    // الحصول على الترتيب الجديد من DOM
     const categoriesList = document.getElementById('categoriesList');
     const categoryItems = categoriesList.querySelectorAll('.category-item');
     const newOrder = [];
@@ -4306,8 +4301,10 @@ async function saveCategoriesOrder() {
         }
     });
     
+    // تحديث مصفوفة الفئات بالترتيب الجديد
     categoriesWithImages = newOrder;
     
+    // حفظ في قاعدة البيانات
     await saveCategoriesToFirestore();
     
     alert('تم حفظ ترتيب الفئات بنجاح!');
@@ -4760,6 +4757,7 @@ function loadOrders(searchTerm = '', page = 1) {
             const orderId = parseInt(this.getAttribute('data-id'));
             const select = document.querySelector(`.order-status-select[data-id="${orderId}"]`);
             const newStatus = select.value;
+            // استخدام withLoading لمنع الضغط المتكرر
             withLoading(this, () => updateOrderStatus(orderId, newStatus));
         });
     });
@@ -5705,11 +5703,11 @@ function setupModalListeners() {
         });
     }
     
+    // تطبيق وظيفة السحب والإفلات عند تحميل الصفحة
     setupDragAndDrop();
 }
     
 </script>
 
 </body>
-                    </html>
-
+ </html>
